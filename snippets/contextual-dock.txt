@@ -133,7 +133,6 @@ export const ViContextualDock = forwardRef<HTMLDivElement, ViContextualDockProps
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b03-navigation-utils.ts ---
 "use client";
 
@@ -303,7 +302,6 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string) {
     event.altKey === wantsAlt &&
     event.shiftKey === wantsShift;
 }
-
 
 // --- src/components/vicomponents/components/shared/b03-navigation.css ---
 .vi-b03-control {
@@ -1024,7 +1022,6 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string) {
   }
 }
 
-
 // --- src/components/vicomponents/demos/contextual-dock.tsx ---
 "use client";
 
@@ -1035,7 +1032,6 @@ import { ViContextualDock } from "../components/contextual-dock";
 export function ContextualDockDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViContextualDock {...visual} items={["Home", "Work", "About", "Contact"]} label="Navigation dock" value="Work" />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1354,6 +1350,11 @@ export function ContextualDockDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1544,7 +1545,6 @@ export function ContextualDockDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1601,7 +1601,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1718,7 +1717,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1831,7 +1829,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/contextual-dock/index.ts ---
 export { ViContextualDock, type ViContextualDockProps } from "./vi-contextual-dock";

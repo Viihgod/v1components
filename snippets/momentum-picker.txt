@@ -240,7 +240,6 @@ export const ViMomentumPicker = forwardRef<HTMLDivElement, ViMomentumPickerProps
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b04-manipulation-utils.ts ---
 "use client";
 
@@ -390,7 +389,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
     element.releasePointerCapture(pointerId);
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/b04-manipulation.css ---
 .vi-b04-control {
@@ -1052,7 +1050,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
 
 .vi-b04-talk { padding: var(--vi-space-2, 0.5rem); }
 
-
 // --- src/components/vicomponents/demos/momentum-picker.tsx ---
 "use client";
 
@@ -1063,7 +1060,6 @@ import { ViMomentumPicker } from "../components/momentum-picker";
 export function MomentumPickerDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViMomentumPicker {...visual} label="Choose a level" items={["Quiet", "Balanced", "Bold", "Max"]} defaultValue="Balanced" />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1382,6 +1378,11 @@ export function MomentumPickerDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1572,7 +1573,6 @@ export function MomentumPickerDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1629,7 +1629,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1746,7 +1745,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1859,7 +1857,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/momentum-picker/index.ts ---
 export { ViMomentumPicker, type ViMomentumPickerProps } from "./vi-momentum-picker";

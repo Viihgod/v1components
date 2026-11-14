@@ -145,7 +145,6 @@ export const ViRubberBandSlider = forwardRef<HTMLInputElement, ViRubberBandSlide
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b04-manipulation-utils.ts ---
 "use client";
 
@@ -295,7 +294,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
     element.releasePointerCapture(pointerId);
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/b04-manipulation.css ---
 .vi-b04-control {
@@ -957,7 +955,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
 
 .vi-b04-talk { padding: var(--vi-space-2, 0.5rem); }
 
-
 // --- src/components/vicomponents/demos/rubber-band-slider.tsx ---
 "use client";
 
@@ -968,7 +965,6 @@ import { ViRubberBandSlider } from "../components/rubber-band-slider";
 export function RubberBandSliderDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViRubberBandSlider {...visual} aria-label="Intensity" defaultValue={42} min={0} max={100} step={1} />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1287,6 +1283,11 @@ export function RubberBandSliderDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1477,7 +1478,6 @@ export function RubberBandSliderDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1534,7 +1534,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1651,7 +1650,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1764,7 +1762,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/rubber-band-slider/index.ts ---
 export { ViRubberBandSlider, type ViRubberBandSliderProps } from "./vi-rubber-band-slider";

@@ -128,7 +128,6 @@ export const ViKeycapPress = forwardRef<HTMLButtonElement, ViKeycapPressProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/keycap-press/vi-keycap-press.css ---
 .vi-keycap-press {
   display: inline-flex;
@@ -188,7 +187,6 @@ export const ViKeycapPress = forwardRef<HTMLButtonElement, ViKeycapPressProps>(
     transform: none;
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -303,7 +301,6 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/demos/keycap-press.tsx ---
 "use client";
 
@@ -314,7 +311,6 @@ import { ViKeycapPress } from "../components/keycap-press";
 export function KeycapPressDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViKeycapPress {...visual} label="K" shortcut="⌘K" />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -633,6 +629,11 @@ export function KeycapPressDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -823,7 +824,6 @@ export function KeycapPressDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -880,7 +880,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -1010,7 +1009,6 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -1126,10 +1124,8 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/keycap-press/index.ts ---
 export { ViKeycapPress, type ViKeycapPressProps } from "./vi-keycap-press";
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {

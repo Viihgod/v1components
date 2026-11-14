@@ -83,7 +83,6 @@ export const ViSkeletonToContent = forwardRef<HTMLDivElement, ViSkeletonToConten
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b07-progress-utils.ts ---
 "use client";
 
@@ -214,7 +213,6 @@ export function formatCountdown(milliseconds: number) {
   const remainder = seconds % 60;
   return `${minutes}:${String(remainder).padStart(2, "0")}`;
 }
-
 
 // --- src/components/vicomponents/components/shared/b07-progress.css ---
 .vi-b07-control {
@@ -546,7 +544,6 @@ export function formatCountdown(milliseconds: number) {
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/skeleton-to-content.tsx ---
 "use client";
 
@@ -560,7 +557,6 @@ export function SkeletonToContentDemo({ visual }: { visual?: ViVisualProps }) {
   const [loading, setLoading] = useState(true);
   return <div className="vi-b07-demo"><button type="button" onClick={() => setLoading((current) => !current)}>{loading ? "Show content" : "Show skeleton"}</button><ViSkeletonToContent {...visual} loading={loading} skeleton={<ViShimmerSkeleton {...visual} radius={visual?.radius === "pill" ? 999 : visual?.radius === "none" ? 0 : visual?.radius} label="Loading preview" lines={3} />}><p className="vi-b07-demo__content">Content is ready to read.</p></ViSkeletonToContent></div>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -879,6 +875,11 @@ export function SkeletonToContentDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1069,7 +1070,6 @@ export function SkeletonToContentDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1126,7 +1126,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1243,7 +1242,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1357,14 +1355,11 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/components/shimmer-skeleton/index.ts ---
 export { ViShimmerSkeleton, type ViShimmerSkeletonProps } from "./vi-shimmer-skeleton";
 
-
 // --- src/components/vicomponents/components/skeleton-to-content/index.ts ---
 export { ViSkeletonToContent, type ViSkeletonToContentProps } from "./vi-skeleton-to-content";
-
 
 // --- src/components/vicomponents/components/shimmer-skeleton/vi-shimmer-skeleton.tsx ---
 "use client";

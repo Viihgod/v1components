@@ -151,7 +151,6 @@ export const ViChoiceChips = forwardRef<HTMLDivElement, ViChoiceChipsProps>(func
   );
 });
 
-
 // --- src/components/vicomponents/components/shared/form-input-utils.ts ---
 "use client";
 
@@ -183,7 +182,6 @@ export function clampNumber(value: number, min: number, max: number) {
 export function isEditableInputTarget(target: EventTarget | null) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 }
-
 
 // --- src/components/vicomponents/components/shared/b02-inputs.css ---
 .vi-b02-control {
@@ -835,7 +833,6 @@ export function isEditableInputTarget(target: EventTarget | null) {
   to { opacity: 0; transform: translate(var(--vi-spark-x), var(--vi-spark-y)) rotate(55deg) scale(1.15); }
 }
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -950,7 +947,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
     "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -1080,14 +1076,12 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/demos/choice-chips.tsx ---
 "use client";
 
 import type { ViVisualProps } from "../core/visual-props";
 import { ViChoiceChips } from "../components/choice-chips";
 export function ChoiceChipsDemo({ visual }: { visual?: ViVisualProps }) { return <ViChoiceChips {...visual} label="Focus" items={[{ value: "design", label: "Design" }, { value: "motion", label: "Motion" }, { value: "systems", label: "Systems" }]} defaultValue="motion" name="focus" />; }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1406,6 +1400,11 @@ export function ChoiceChipsDemo({ visual }: { visual?: ViVisualProps }) { return
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1596,7 +1595,6 @@ export function ChoiceChipsDemo({ visual }: { visual?: ViVisualProps }) { return
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1653,7 +1651,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -1767,7 +1764,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {
@@ -1946,7 +1942,6 @@ button.vi-component-surface > .vi-component-surface__content {
   justify-content: center;
   gap: var(--vi-space-2, 0.5rem);
 }
-
 
 // --- src/components/vicomponents/components/choice-chips/index.ts ---
 export { ViChoiceChips, type ViChoiceChipsProps } from "./vi-choice-chips";

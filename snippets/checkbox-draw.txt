@@ -86,7 +86,6 @@ export const ViCheckboxDraw = forwardRef<HTMLInputElement, ViCheckboxDrawProps>(
   );
 });
 
-
 // --- src/components/vicomponents/components/shared/b02-inputs.css ---
 .vi-b02-control {
   color: var(--vi-standby-text);
@@ -737,7 +736,6 @@ export const ViCheckboxDraw = forwardRef<HTMLInputElement, ViCheckboxDrawProps>(
   to { opacity: 0; transform: translate(var(--vi-spark-x), var(--vi-spark-y)) rotate(55deg) scale(1.15); }
 }
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -852,7 +850,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
     "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -982,14 +979,12 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/demos/checkbox-draw.tsx ---
 "use client";
 
 import type { ViVisualProps } from "../core/visual-props";
 import { ViCheckboxDraw } from "../components/checkbox-draw";
 export function CheckboxDrawDemo({ visual }: { visual?: ViVisualProps }) { return <ViCheckboxDraw {...visual} defaultChecked label="Include prototypes" name="include-prototypes" />; }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1308,6 +1303,11 @@ export function CheckboxDrawDemo({ visual }: { visual?: ViVisualProps }) { retur
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1498,7 +1498,6 @@ export function CheckboxDrawDemo({ visual }: { visual?: ViVisualProps }) { retur
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1612,7 +1611,6 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1669,7 +1667,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {
@@ -1848,7 +1845,6 @@ button.vi-component-surface > .vi-component-surface__content {
   justify-content: center;
   gap: var(--vi-space-2, 0.5rem);
 }
-
 
 // --- src/components/vicomponents/components/checkbox-draw/index.ts ---
 export { ViCheckboxDraw, type ViCheckboxDrawProps } from "./vi-checkbox-draw";

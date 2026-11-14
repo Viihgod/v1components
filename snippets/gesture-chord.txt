@@ -174,7 +174,6 @@ export const ViGestureChord = forwardRef<HTMLDivElement, ViGestureChordProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b04-manipulation-utils.ts ---
 "use client";
 
@@ -324,7 +323,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
     element.releasePointerCapture(pointerId);
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/b04-manipulation.css ---
 .vi-b04-control {
@@ -986,7 +984,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
 
 .vi-b04-talk { padding: var(--vi-space-2, 0.5rem); }
 
-
 // --- src/components/vicomponents/demos/gesture-chord.tsx ---
 "use client";
 
@@ -999,7 +996,6 @@ export function GestureChordDemo({ visual }: { visual?: ViVisualProps }) {
   const [status, setStatus] = useState("Press G, G, Enter");
   return <div className="vi-b04-demo"><ViGestureChord {...visual} sequence={["g", "g", "Enter"]} onComplete={() => setStatus("Complete")} onError={() => setStatus("Try again")} /><small aria-live="polite">{status}</small></div>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1318,6 +1314,11 @@ export function GestureChordDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1508,7 +1509,6 @@ export function GestureChordDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1565,7 +1565,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1682,7 +1681,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1795,7 +1793,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/gesture-chord/index.ts ---
 export { ViGestureChord, type ViGestureChordProps } from "./vi-gesture-chord";

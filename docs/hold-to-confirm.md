@@ -50,3 +50,4 @@ Vitest covers completion, cancellation, timer cleanup, and keyboard parity; E2E/
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-hold-to-confirm)
 - [Copyable source bundle](../snippets/hold-to-confirm.txt)
+- [Motion recording](../media/hold-to-confirm.webm)

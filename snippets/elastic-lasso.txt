@@ -272,7 +272,6 @@ export const ViElasticLasso = forwardRef<HTMLDivElement, ViElasticLassoProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b05-drag-utils.ts ---
 "use client";
 
@@ -384,7 +383,6 @@ export function createAnnouncement(message: string) {
 export function renderMaybe<T>(render: ((item: T, index: number) => ReactNode) | undefined, item: T, index: number, fallback: ReactNode) {
   return render ? render(item, index) : fallback;
 }
-
 
 // --- src/components/vicomponents/components/shared/b05-drag.css ---
 .vi-b05-control {
@@ -685,7 +683,6 @@ export function renderMaybe<T>(render: ((item: T, index: number) => ReactNode) |
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/elastic-lasso.tsx ---
 "use client";
 
@@ -700,7 +697,6 @@ export function ElasticLassoDemo({ visual }: { visual?: ViVisualProps }) {
   const [value, setValue] = useState<string[]>([]);
   return <ViElasticLasso {...visual} aria-label="Demo selection area" items={lassoItems} value={value} onValueChange={setValue} getItemId={(item) => item.id ?? item.label} />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1019,6 +1015,11 @@ export function ElasticLassoDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1209,7 +1210,6 @@ export function ElasticLassoDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1266,7 +1266,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1383,7 +1382,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1496,7 +1494,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/elastic-lasso/index.ts ---
 export { ViElasticLasso, type ViElasticLassoItem, type ViElasticLassoProps } from "./vi-elastic-lasso";

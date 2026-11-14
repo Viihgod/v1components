@@ -81,7 +81,6 @@ export const ViIndeterminateBar = forwardRef<HTMLDivElement, ViIndeterminateBarP
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b07-progress-utils.ts ---
 "use client";
 
@@ -212,7 +211,6 @@ export function formatCountdown(milliseconds: number) {
   const remainder = seconds % 60;
   return `${minutes}:${String(remainder).padStart(2, "0")}`;
 }
-
 
 // --- src/components/vicomponents/components/shared/b07-progress.css ---
 .vi-b07-control {
@@ -544,7 +542,6 @@ export function formatCountdown(milliseconds: number) {
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/indeterminate-bar.tsx ---
 "use client";
 
@@ -555,7 +552,6 @@ import { ViIndeterminateBar } from "../components/indeterminate-bar";
 export function IndeterminateBarDemo({ visual }: { visual?: ViVisualProps }) {
   return <div className="vi-b07-demo"><ViIndeterminateBar {...visual} label="Syncing changes" /></div>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -874,6 +870,11 @@ export function IndeterminateBarDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1064,7 +1065,6 @@ export function IndeterminateBarDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1121,7 +1121,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1238,7 +1237,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1351,7 +1349,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/indeterminate-bar/index.ts ---
 export { ViIndeterminateBar, type ViIndeterminateBarProps, type ViIndeterminateBarSize } from "./vi-indeterminate-bar";

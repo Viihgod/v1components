@@ -198,7 +198,6 @@ export const ViHoldToConfirm = forwardRef<HTMLButtonElement, ViHoldToConfirmProp
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b04-manipulation-utils.ts ---
 "use client";
 
@@ -348,7 +347,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
     element.releasePointerCapture(pointerId);
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/b04-manipulation.css ---
 .vi-b04-control {
@@ -1010,7 +1008,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
 
 .vi-b04-talk { padding: var(--vi-space-2, 0.5rem); }
 
-
 // --- src/components/vicomponents/demos/hold-to-confirm.tsx ---
 "use client";
 
@@ -1021,9 +1018,8 @@ import { ViHoldToConfirm } from "../components/hold-to-confirm";
 
 export function HoldToConfirmDemo({ visual }: { visual?: ViVisualProps }) {
   const [status, setStatus] = useState("Waiting");
-  return <div className="vi-b04-demo vi-hold-confirm-demo"><ViHoldToConfirm {...visual} label="Hold to confirm" holdMs={650} onConfirm={() => setStatus("Confirmed")} onCancel={() => setStatus("Cancelled")} /><small aria-live="polite">{status}</small></div>;
+  return <div className="vi-b04-demo vi-hold-confirm-demo"><ViHoldToConfirm {...visual} label="Hold to confirm" holdMs={650} onConfirm={() => setStatus("Confirmed")} onCancel={() => setStatus("Cancelled")}><span className="vi-hold-confirm-demo__label">Hold to<span>confirm</span></span></ViHoldToConfirm><small aria-live="polite">{status}</small></div>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1342,6 +1338,11 @@ export function HoldToConfirmDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1532,7 +1533,6 @@ export function HoldToConfirmDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1589,7 +1589,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1706,7 +1705,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1819,7 +1817,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/hold-to-confirm/index.ts ---
 export { ViHoldToConfirm, type ViHoldToConfirmProps } from "./vi-hold-to-confirm";

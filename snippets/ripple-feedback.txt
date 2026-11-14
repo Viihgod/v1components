@@ -213,7 +213,6 @@ export const ViRippleFeedback = forwardRef<HTMLButtonElement, ViRippleFeedbackPr
   },
 );
 
-
 // --- src/components/vicomponents/components/ripple-feedback/vi-ripple-feedback.css ---
 .vi-ripple-feedback {
   display: inline-flex;
@@ -302,7 +301,6 @@ export const ViRippleFeedback = forwardRef<HTMLButtonElement, ViRippleFeedbackPr
     will-change: auto;
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -417,7 +415,6 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/demos/ripple-feedback.tsx ---
 "use client";
 
@@ -428,7 +425,6 @@ import { ViRippleFeedback } from "../components/ripple-feedback";
 export function RippleFeedbackDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViRippleFeedback {...visual}>Tap for feedback</ViRippleFeedback>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -747,6 +743,11 @@ export function RippleFeedbackDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -937,7 +938,6 @@ export function RippleFeedbackDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/site/vi-component-config.ts ---
 import type { CSSProperties } from "react";
 
@@ -1064,7 +1064,6 @@ export function setViHoverOrigin({ currentTarget, clientX, clientY }: {
   currentTarget.style.setProperty("--vi-hover-y", (y * 100) + "%");
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1121,7 +1120,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1237,7 +1235,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
     "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
   };
 }
-
 
 // --- src/components/vicomponents/components/ripple-feedback/index.ts ---
 export {

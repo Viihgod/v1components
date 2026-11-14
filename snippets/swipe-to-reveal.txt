@@ -259,7 +259,6 @@ export const ViSwipeToReveal = forwardRef<HTMLDivElement, ViSwipeToRevealProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b05-drag-utils.ts ---
 "use client";
 
@@ -371,7 +370,6 @@ export function createAnnouncement(message: string) {
 export function renderMaybe<T>(render: ((item: T, index: number) => ReactNode) | undefined, item: T, index: number, fallback: ReactNode) {
   return render ? render(item, index) : fallback;
 }
-
 
 // --- src/components/vicomponents/components/shared/b05-drag.css ---
 .vi-b05-control {
@@ -672,7 +670,6 @@ export function renderMaybe<T>(render: ((item: T, index: number) => ReactNode) |
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/swipe-to-reveal.tsx ---
 "use client";
 
@@ -683,7 +680,6 @@ import { ViSwipeToReveal } from "../components/swipe-to-reveal";
 export function SwipeToRevealDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViSwipeToReveal {...visual} aria-label="Swipe demo actions" actions={[{ id: "archive", label: "Archive" }, { id: "delete", label: "Delete" }]}><span>Swipe left or use the arrow keys</span></ViSwipeToReveal>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1002,6 +998,11 @@ export function SwipeToRevealDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1192,7 +1193,6 @@ export function SwipeToRevealDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1249,7 +1249,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1366,7 +1365,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1479,7 +1477,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/swipe-to-reveal/index.ts ---
 export { ViSwipeToReveal, type ViSwipeAction, type ViSwipeToRevealProps } from "./vi-swipe-to-reveal";

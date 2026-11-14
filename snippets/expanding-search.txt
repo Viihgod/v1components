@@ -133,7 +133,6 @@ export const ViExpandingSearch = forwardRef<HTMLInputElement, ViExpandingSearchP
   );
 });
 
-
 // --- src/components/vicomponents/components/shared/b02-inputs.css ---
 .vi-b02-control {
   color: var(--vi-standby-text);
@@ -784,7 +783,6 @@ export const ViExpandingSearch = forwardRef<HTMLInputElement, ViExpandingSearchP
   to { opacity: 0; transform: translate(var(--vi-spark-x), var(--vi-spark-y)) rotate(55deg) scale(1.15); }
 }
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -899,7 +897,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
     "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -1029,14 +1026,12 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/demos/expanding-search.tsx ---
 "use client";
 
 import type { ViVisualProps } from "../core/visual-props";
 import { ViExpandingSearch } from "../components/expanding-search";
 export function ExpandingSearchDemo({ visual }: { visual?: ViVisualProps }) { return <ViExpandingSearch {...visual} placeholder="Search projects" aria-label="Search projects" onSubmit={() => undefined} />; }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1355,6 +1350,11 @@ export function ExpandingSearchDemo({ visual }: { visual?: ViVisualProps }) { re
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1545,7 +1545,6 @@ export function ExpandingSearchDemo({ visual }: { visual?: ViVisualProps }) { re
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1603,7 +1602,6 @@ export function resolveViMotionConfig(
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/form-input-utils.ts ---
 "use client";
 
@@ -1635,7 +1633,6 @@ export function clampNumber(value: number, min: number, max: number) {
 export function isEditableInputTarget(target: EventTarget | null) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -1749,7 +1746,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {
@@ -1928,7 +1924,6 @@ button.vi-component-surface > .vi-component-surface__content {
   justify-content: center;
   gap: var(--vi-space-2, 0.5rem);
 }
-
 
 // --- src/components/vicomponents/components/expanding-search/index.ts ---
 export { ViExpandingSearch, type ViExpandingSearchProps } from "./vi-expanding-search";

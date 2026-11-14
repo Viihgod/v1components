@@ -236,7 +236,6 @@ export const ViInertialDial = forwardRef<HTMLDivElement, ViInertialDialProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b04-manipulation-utils.ts ---
 "use client";
 
@@ -386,7 +385,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
     element.releasePointerCapture(pointerId);
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/b04-manipulation.css ---
 .vi-b04-control {
@@ -1048,7 +1046,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
 
 .vi-b04-talk { padding: var(--vi-space-2, 0.5rem); }
 
-
 // --- src/components/vicomponents/demos/inertial-dial.tsx ---
 "use client";
 
@@ -1059,7 +1056,6 @@ import { ViInertialDial } from "../components/inertial-dial";
 export function InertialDialDemo({ visual, display }: { visual?: ViVisualProps; display?: "indicator" | "numeric" }) {
   return <ViInertialDial {...visual} display={display} label="Momentum" defaultValue={50} />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1378,6 +1374,11 @@ export function InertialDialDemo({ visual, display }: { visual?: ViVisualProps; 
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1568,7 +1569,6 @@ export function InertialDialDemo({ visual, display }: { visual?: ViVisualProps; 
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1625,7 +1625,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1742,7 +1741,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1855,7 +1853,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/inertial-dial/index.ts ---
 export { ViInertialDial, type ViInertialDialProps } from "./vi-inertial-dial";

@@ -48,3 +48,4 @@ B03 tests cover controlled/uncontrolled disclosure, roving keys, Escape, empty s
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-accordion-spring)
 - [Copyable source bundle](../snippets/accordion-spring.txt)
+- [Motion recording](../media/accordion-spring.webm)

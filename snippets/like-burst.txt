@@ -188,7 +188,6 @@ export const ViLikeBurst = forwardRef<HTMLButtonElement, ViLikeBurstProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/like-burst/vi-like-burst.css ---
 .vi-like-burst {
   position: relative;
@@ -306,7 +305,6 @@ export const ViLikeBurst = forwardRef<HTMLButtonElement, ViLikeBurstProps>(
   }
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -420,7 +418,6 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/demos/like-burst.tsx ---
 "use client";
 
@@ -436,7 +433,6 @@ export function LikeBurstDemo({ visual }: { visual?: ViVisualProps }) {
     </div>
   );
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -755,6 +751,11 @@ export function LikeBurstDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -945,7 +946,6 @@ export function LikeBurstDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1002,7 +1002,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -1132,7 +1131,6 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -1248,10 +1246,8 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/like-burst/index.ts ---
 export { ViLikeBurst, type ViLikeBurstProps } from "./vi-like-burst";
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {

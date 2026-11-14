@@ -6,7 +6,7 @@ Legacy Lab navigation demo retained as a published compatibility entry.
 
 ## Install/import
 
-Open the `/lab/sliding-pill` demo or use the public Lab composition; no private component import is required.
+Open the `/lab#v1c-segmented` demo or use the public Lab composition; no private component import is required.
 
 ## Anatomy
 
@@ -34,7 +34,7 @@ The demo has a bounded option set and animates only the indicator transform.
 
 ## Example
 
-Use the published `/lab/sliding-pill` route as the compatibility example.
+Use the published `/lab#v1c-segmented` route as the compatibility example.
 
 ## Portable source
 

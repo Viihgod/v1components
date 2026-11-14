@@ -216,7 +216,6 @@ export const ViStarRating = forwardRef<HTMLDivElement, ViStarRatingProps>(functi
   );
 });
 
-
 // --- src/components/vicomponents/components/shared/form-input-utils.ts ---
 "use client";
 
@@ -248,7 +247,6 @@ export function clampNumber(value: number, min: number, max: number) {
 export function isEditableInputTarget(target: EventTarget | null) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 }
-
 
 // --- src/components/vicomponents/components/shared/b02-inputs.css ---
 .vi-b02-control {
@@ -900,14 +898,12 @@ export function isEditableInputTarget(target: EventTarget | null) {
   to { opacity: 0; transform: translate(var(--vi-spark-x), var(--vi-spark-y)) rotate(55deg) scale(1.15); }
 }
 
-
 // --- src/components/vicomponents/demos/star-rating.tsx ---
 "use client";
 
 import type { ViVisualProps } from "../core/visual-props";
 import { ViStarRating } from "../components/star-rating";
 export function StarRatingDemo({ visual }: { visual?: ViVisualProps }) { return <ViStarRating {...visual} defaultValue={4} allowClear labels={["One star", "Two stars", "Three stars", "Four stars", "Five stars"]} />; }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1226,6 +1222,11 @@ export function StarRatingDemo({ visual }: { visual?: ViVisualProps }) { return 
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1416,7 +1417,6 @@ export function StarRatingDemo({ visual }: { visual?: ViVisualProps }) { return 
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/site/vi-component-config.ts ---
 import type { CSSProperties } from "react";
 
@@ -1543,7 +1543,6 @@ export function setViHoverOrigin({ currentTarget, clientX, clientY }: {
   currentTarget.style.setProperty("--vi-hover-y", (y * 100) + "%");
 }
 
-
 // --- src/components/site/vi-component-surface.tsx ---
 "use client";
 
@@ -1627,7 +1626,6 @@ export function ViComponentSurface({
   );
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1684,7 +1682,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -1798,7 +1795,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1914,7 +1910,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
     "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
   };
 }
-
 
 // --- src/components/vicomponents/components/star-rating/index.ts ---
 export {

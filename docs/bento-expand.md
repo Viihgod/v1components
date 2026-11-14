@@ -48,3 +48,4 @@ B03 tests cover controlled state, grid keyboard behavior, empty content, dynamic
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-bento-expand)
 - [Copyable source bundle](../snippets/bento-expand.txt)
+- [Motion recording](../media/bento-expand.webm)

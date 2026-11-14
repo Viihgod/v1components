@@ -140,7 +140,6 @@ export const ViSubmitStates = forwardRef<HTMLDivElement, ViSubmitStatesProps>(
 
 export type ViSubmitStatesMessage = ReactNode;
 
-
 // --- src/components/vicomponents/components/shared/b06-async-utils.tsx ---
 "use client";
 
@@ -505,7 +504,6 @@ export const ViAsyncTransient = forwardRef<HTMLDivElement, ViAsyncTransientProps
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b06-async.css ---
 .vi-b06-control {
   --vi-b06-surface: var(--vi-standby, var(--vi-color-surface));
@@ -784,7 +782,6 @@ export const ViAsyncTransient = forwardRef<HTMLDivElement, ViAsyncTransientProps
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/submit-states.tsx ---
 "use client";
 
@@ -805,7 +802,6 @@ export function SubmitStatesDemo({ visual }: { visual?: ViVisualProps }) {
     />
   );
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1124,6 +1120,11 @@ export function SubmitStatesDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1314,7 +1315,6 @@ export function SubmitStatesDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1371,7 +1371,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1488,7 +1487,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1601,7 +1599,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/submit-states/index.ts ---
 export { ViSubmitStates, type ViSubmitLabels, type ViSubmitStatesProps, type ViSubmitStatus, type ViSubmitAction } from "./vi-submit-states";

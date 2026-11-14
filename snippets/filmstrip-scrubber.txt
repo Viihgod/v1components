@@ -154,7 +154,6 @@ export const ViFilmstripScrubber = forwardRef<HTMLDivElement, ViFilmstripScrubbe
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b04-manipulation-utils.ts ---
 "use client";
 
@@ -304,7 +303,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
     element.releasePointerCapture(pointerId);
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/b04-manipulation.css ---
 .vi-b04-control {
@@ -966,7 +964,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
 
 .vi-b04-talk { padding: var(--vi-space-2, 0.5rem); }
 
-
 // --- src/components/vicomponents/demos/filmstrip-scrubber.tsx ---
 "use client";
 
@@ -979,7 +976,6 @@ const frames = ["One", "Two", "Three", "Four"];
 export function FilmstripScrubberDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViFilmstripScrubber {...visual} label="Preview frames" frames={frames} getTimestamp={(_frame, index) => `00:0${index}`} renderFrame={(frame, index) => <span aria-label={`Frame ${index + 1}`}>{frame}</span>} />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1298,6 +1294,11 @@ export function FilmstripScrubberDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1488,7 +1489,6 @@ export function FilmstripScrubberDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1545,7 +1545,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1662,7 +1661,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1775,7 +1773,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/filmstrip-scrubber/index.ts ---
 export { ViFilmstripScrubber, type ViFilmstripScrubberProps } from "./vi-filmstrip-scrubber";

@@ -199,7 +199,6 @@ export const ViOrbitalActionMenu = forwardRef<HTMLDivElement, ViOrbitalActionMen
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b03-navigation-utils.ts ---
 "use client";
 
@@ -369,7 +368,6 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string) {
     event.altKey === wantsAlt &&
     event.shiftKey === wantsShift;
 }
-
 
 // --- src/components/vicomponents/components/shared/b03-navigation.css ---
 .vi-b03-control {
@@ -1090,7 +1088,6 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: string) {
   }
 }
 
-
 // --- src/components/vicomponents/demos/orbital-action-menu.tsx ---
 "use client";
 
@@ -1101,7 +1098,6 @@ import { ViOrbitalActionMenu } from "../components/orbital-action-menu";
 export function OrbitalActionMenuDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViOrbitalActionMenu {...visual} actions={["Add", "Edit", "Share", "Delete"]} label="Orbital actions" />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1420,6 +1416,11 @@ export function OrbitalActionMenuDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1610,7 +1611,6 @@ export function OrbitalActionMenuDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1667,7 +1667,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1784,7 +1783,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1897,7 +1895,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/orbital-action-menu/index.ts ---
 export { ViOrbitalActionMenu, type ViOrbitalActionMenuProps } from "./vi-orbital-action-menu";

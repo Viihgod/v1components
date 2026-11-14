@@ -10,6 +10,8 @@ A React component library by Victor Marques. The approved catalog follows the sa
 2. Install React and the external packages at the top of the bundle. Save each named file at the path in its header.
 3. Import the component or render the example. Keep the bundled styles alongside the code.
 
+To unpack a bundle into its files with Node.js, run `node scripts/unpack.mjs segmented`. An optional second argument sets the output directory.
+
 The portfolio serves the current configured exports. This repository is the versioned source and preview snapshot. See [release maintenance](CONTRIBUTING.md#maintain-a-release) for the sync steps.
 
 ## Catalog
@@ -51,17 +53,17 @@ The portfolio serves the current configured exports. This repository is the vers
 | 33 | [Checkbox draw](docs/checkbox-draw.md) · [Source](snippets/checkbox-draw.txt) | <img width="168" loading="lazy" src="media/checkbox-draw.png" alt="Checkbox draw preview"> |
 | 34 | [Card resize](docs/card-resize.md) · [Source](snippets/card-resize.txt) | <img width="168" loading="lazy" src="media/card-resize.png" alt="Card resize preview"> |
 | 35 | [Tab pill glide](docs/tab-pill-glide.md) · [Source](snippets/tab-pill-glide.txt) · [Video](media/tab-pill-glide.webm) | <img width="168" loading="lazy" src="media/tab-pill-glide.png" alt="Tab pill glide preview"> |
-| 36 | [Accordion spring](docs/accordion-spring.md) · [Source](snippets/accordion-spring.txt) | <img width="168" loading="lazy" src="media/accordion-spring.png" alt="Accordion spring preview"> |
-| 37 | [Speed dial fab](docs/speed-dial-fab.md) · [Source](snippets/speed-dial-fab.txt) | <img width="168" loading="lazy" src="media/speed-dial-fab.png" alt="Speed dial fab preview"> |
+| 36 | [Accordion spring](docs/accordion-spring.md) · [Source](snippets/accordion-spring.txt) · [Video](media/accordion-spring.webm) | <img width="168" loading="lazy" src="media/accordion-spring.png" alt="Accordion spring preview"> |
+| 37 | [Speed dial fab](docs/speed-dial-fab.md) · [Source](snippets/speed-dial-fab.txt) · [Video](media/speed-dial-fab.webm) | <img width="168" loading="lazy" src="media/speed-dial-fab.png" alt="Speed dial fab preview"> |
 | 38 | [Orbital action menu](docs/orbital-action-menu.md) · [Source](snippets/orbital-action-menu.txt) | <img width="168" loading="lazy" src="media/orbital-action-menu.png" alt="Orbital action menu preview"> |
 | 39 | [Contextual dock](docs/contextual-dock.md) · [Source](snippets/contextual-dock.txt) | <img width="168" loading="lazy" src="media/contextual-dock.png" alt="Contextual dock preview"> |
 | 40 | [Hover intent gate](docs/hover-intent-gate.md) · [Source](snippets/hover-intent-gate.txt) | <img width="168" loading="lazy" src="media/hover-intent-gate.png" alt="Hover intent gate preview"> |
-| 41 | [Bento expand](docs/bento-expand.md) · [Source](snippets/bento-expand.txt) | <img width="168" loading="lazy" src="media/bento-expand.png" alt="Bento expand preview"> |
+| 41 | [Bento expand](docs/bento-expand.md) · [Source](snippets/bento-expand.txt) · [Video](media/bento-expand.webm) | <img width="168" loading="lazy" src="media/bento-expand.png" alt="Bento expand preview"> |
 | 42 | [Snap rail](docs/snap-rail.md) · [Source](snippets/snap-rail.txt) | <img width="168" loading="lazy" src="media/snap-rail.png" alt="Snap rail preview"> |
 | 43 | [Command palette bloom](docs/command-palette-bloom.md) · [Source](snippets/command-palette-bloom.txt) | <img width="168" loading="lazy" src="media/command-palette-bloom.png" alt="Command palette bloom preview"> |
 | 44 | [Focus relay](docs/focus-relay.md) · [Source](snippets/focus-relay.txt) | <img width="168" loading="lazy" src="media/focus-relay.png" alt="Focus relay preview"> |
 | 45 | [Delayed tooltip](docs/delayed-tooltip.md) · [Source](snippets/delayed-tooltip.txt) | <img width="168" loading="lazy" src="media/delayed-tooltip.png" alt="Delayed tooltip preview"> |
-| 46 | [Hold to confirm](docs/hold-to-confirm.md) · [Source](snippets/hold-to-confirm.txt) | <img width="168" loading="lazy" src="media/hold-to-confirm.png" alt="Hold to confirm preview"> |
+| 46 | [Hold to confirm](docs/hold-to-confirm.md) · [Source](snippets/hold-to-confirm.txt) · [Video](media/hold-to-confirm.webm) | <img width="168" loading="lazy" src="media/hold-to-confirm.png" alt="Hold to confirm preview"> |
 | 47 | [Rubber band slider](docs/rubber-band-slider.md) · [Source](snippets/rubber-band-slider.txt) | <img width="168" loading="lazy" src="media/rubber-band-slider.png" alt="Rubber band slider preview"> |
 | 48 | [Rotary knob](docs/rotary-knob.md) · [Source](snippets/rotary-knob.txt) | <img width="168" loading="lazy" src="media/rotary-knob.png" alt="Rotary knob preview"> |
 | 49 | [Value scrubber](docs/value-scrubber.md) · [Source](snippets/value-scrubber.txt) | <img width="168" loading="lazy" src="media/value-scrubber.png" alt="Value scrubber preview"> |

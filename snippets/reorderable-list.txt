@@ -327,7 +327,6 @@ export const ViReorderableList = forwardRef(ReorderableListInner) as <T>(
   props: ViReorderableListProps<T> & RefAttributes<HTMLOListElement>,
 ) => ReactElement | null;
 
-
 // --- src/components/vicomponents/components/shared/b05-drag-utils.ts ---
 "use client";
 
@@ -439,7 +438,6 @@ export function createAnnouncement(message: string) {
 export function renderMaybe<T>(render: ((item: T, index: number) => ReactNode) | undefined, item: T, index: number, fallback: ReactNode) {
   return render ? render(item, index) : fallback;
 }
-
 
 // --- src/components/vicomponents/components/shared/b05-drag.css ---
 .vi-b05-control {
@@ -740,7 +738,6 @@ export function renderMaybe<T>(render: ((item: T, index: number) => ReactNode) |
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/reorderable-list.tsx ---
 "use client";
 
@@ -755,7 +752,6 @@ export function ReorderableListDemo({ visual }: { visual?: ViVisualProps }) {
   const [items, setItems] = useState(initialItems);
   return <ViReorderableList {...visual} aria-label="Demo order" items={items} getId={(item) => item.id} onReorder={setItems} renderItem={(item) => <span>{item.label}</span>} />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1074,6 +1070,11 @@ export function ReorderableListDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1264,7 +1265,6 @@ export function ReorderableListDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1321,7 +1321,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1438,7 +1437,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1551,7 +1549,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/reorderable-list/index.ts ---
 export { ViReorderableList, type ViReorderableListProps, type ViReorderRenderState } from "./vi-reorderable-list";

@@ -115,7 +115,6 @@ export const ViBadgeCounter = forwardRef<HTMLButtonElement, ViBadgeCounterProps>
   },
 );
 
-
 // --- src/components/vicomponents/components/badge-counter/vi-badge-counter.css ---
 .vi-badge-counter {
   overflow: visible;
@@ -181,7 +180,6 @@ export const ViBadgeCounter = forwardRef<HTMLButtonElement, ViBadgeCounterProps>
     transform: none;
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -296,7 +294,6 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/demos/badge-counter.tsx ---
 "use client";
 
@@ -307,7 +304,6 @@ import { ViBadgeCounter } from "../components/badge-counter";
 export function BadgeCounterDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViBadgeCounter {...visual} count={7} label="Updates" />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -626,6 +622,11 @@ export function BadgeCounterDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -816,7 +817,6 @@ export function BadgeCounterDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -873,7 +873,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -1003,7 +1002,6 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -1119,10 +1117,8 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/badge-counter/index.ts ---
 export { ViBadgeCounter, type ViBadgeCounterProps } from "./vi-badge-counter";
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {

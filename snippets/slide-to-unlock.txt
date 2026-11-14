@@ -231,7 +231,6 @@ export const ViSlideToUnlock = forwardRef<HTMLDivElement, ViSlideToUnlockProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b04-manipulation-utils.ts ---
 "use client";
 
@@ -381,7 +380,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
     element.releasePointerCapture(pointerId);
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/b04-manipulation.css ---
 .vi-b04-control {
@@ -1043,7 +1041,6 @@ export function releasePointerCapture(element: HTMLElement | null, pointerId: nu
 
 .vi-b04-talk { padding: var(--vi-space-2, 0.5rem); }
 
-
 // --- src/components/vicomponents/demos/slide-to-unlock.tsx ---
 "use client";
 
@@ -1056,7 +1053,6 @@ export function SlideToUnlockDemo({ visual }: { visual?: ViVisualProps }) {
   const [status, setStatus] = useState("Locked");
   return <div className="vi-b04-demo"><ViSlideToUnlock {...visual} label="Unlock preview" resetAfterMs={1200} onUnlock={() => setStatus("Unlocked")} onProgressChange={(progress) => { if (progress < 0.85) setStatus("Locked"); }} /><small aria-live="polite">{status}</small></div>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -1375,6 +1371,11 @@ export function SlideToUnlockDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1565,7 +1566,6 @@ export function SlideToUnlockDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1622,7 +1622,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1739,7 +1738,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1852,7 +1850,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/slide-to-unlock/index.ts ---
 export { ViSlideToUnlock, type ViSlideToUnlockProps } from "./vi-slide-to-unlock";

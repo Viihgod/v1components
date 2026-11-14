@@ -152,7 +152,6 @@ export const ViStepProgress = forwardRef<HTMLOListElement, ViStepProgressProps>(
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b07-progress-utils.ts ---
 "use client";
 
@@ -283,7 +282,6 @@ export function formatCountdown(milliseconds: number) {
   const remainder = seconds % 60;
   return `${minutes}:${String(remainder).padStart(2, "0")}`;
 }
-
 
 // --- src/components/vicomponents/components/shared/b07-progress.css ---
 .vi-b07-control {
@@ -615,7 +613,6 @@ export function formatCountdown(milliseconds: number) {
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/step-progress.tsx ---
 "use client";
 
@@ -628,7 +625,6 @@ export function StepProgressDemo({ visual }: { visual?: ViVisualProps }) {
   const [value, setValue] = useState(1);
   return <div className="vi-b07-demo"><ViStepProgress {...visual} value={value} onValueChange={setValue} steps={[{ label: "Brief", description: "Define the question." }, { label: "Build", description: "Shape the interface." }, { label: "Ship", description: "Share the result." }]} /></div>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -947,6 +943,11 @@ export function StepProgressDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1137,7 +1138,6 @@ export function StepProgressDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1194,7 +1194,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1311,7 +1310,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1424,7 +1422,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/step-progress/index.ts ---
 export { ViStepProgress, type ViStepProgressProps, type ViStepProgressStep } from "./vi-step-progress";

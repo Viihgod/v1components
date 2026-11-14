@@ -97,7 +97,6 @@ export const ViElasticProgress = forwardRef<HTMLDivElement, ViElasticProgressPro
   },
 );
 
-
 // --- src/components/vicomponents/components/shared/b07-progress-utils.ts ---
 "use client";
 
@@ -228,7 +227,6 @@ export function formatCountdown(milliseconds: number) {
   const remainder = seconds % 60;
   return `${minutes}:${String(remainder).padStart(2, "0")}`;
 }
-
 
 // --- src/components/vicomponents/components/shared/b07-progress.css ---
 .vi-b07-control {
@@ -560,7 +558,6 @@ export function formatCountdown(milliseconds: number) {
   animation-iteration-count: 1 !important;
 }
 
-
 // --- src/components/vicomponents/demos/elastic-progress.tsx ---
 "use client";
 
@@ -573,7 +570,6 @@ export function ElasticProgressDemo({ visual }: { visual?: ViVisualProps }) {
   const [value, setValue] = useState(68);
   return <div className="vi-b07-demo"><ViElasticProgress {...visual} label="Upload progress" value={value} overshoot /><button type="button" onClick={() => setValue((current) => current >= 100 ? 18 : current + 16)}>Advance</button></div>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -892,6 +888,11 @@ export function ElasticProgressDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -1082,7 +1083,6 @@ export function ElasticProgressDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -1139,7 +1139,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
@@ -1256,7 +1255,6 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
 
@@ -1369,7 +1367,6 @@ export function createActionVisualProps(
 ) {
   return visual;
 }
-
 
 // --- src/components/vicomponents/components/elastic-progress/index.ts ---
 export { ViElasticProgress, type ViElasticProgressProps } from "./vi-elastic-progress";

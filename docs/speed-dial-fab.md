@@ -48,3 +48,4 @@ B03 suites cover opening, action selection, keyboard/touch, focus restoration, a
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-speed-dial-fab)
 - [Copyable source bundle](../snippets/speed-dial-fab.txt)
+- [Motion recording](../media/speed-dial-fab.webm)

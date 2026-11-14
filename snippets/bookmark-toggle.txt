@@ -125,7 +125,6 @@ export const ViBookmarkToggle = forwardRef<HTMLButtonElement, ViBookmarkTogglePr
   },
 );
 
-
 // --- src/components/vicomponents/components/bookmark-toggle/vi-bookmark-toggle.css ---
 .vi-bookmark-toggle {
   display: inline-flex;
@@ -181,7 +180,6 @@ export const ViBookmarkToggle = forwardRef<HTMLButtonElement, ViBookmarkTogglePr
     transform: none;
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -296,7 +294,6 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/demos/bookmark-toggle.tsx ---
 "use client";
 
@@ -307,7 +304,6 @@ import { ViBookmarkToggle } from "../components/bookmark-toggle";
 export function BookmarkToggleDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViBookmarkToggle {...visual} label="Save for later" />;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -626,6 +622,11 @@ export function BookmarkToggleDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -816,7 +817,6 @@ export function BookmarkToggleDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -873,7 +873,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -1003,7 +1002,6 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -1119,10 +1117,8 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/bookmark-toggle/index.ts ---
 export { ViBookmarkToggle, type ViBookmarkToggleProps } from "./vi-bookmark-toggle";
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {

@@ -104,7 +104,6 @@ export const ViSquishButton = forwardRef<HTMLButtonElement, ViSquishButtonProps>
   },
 );
 
-
 // --- src/components/vicomponents/components/squish-button/vi-squish-button.css ---
 .vi-squish-button {
   display: inline-flex;
@@ -140,7 +139,6 @@ export const ViSquishButton = forwardRef<HTMLButtonElement, ViSquishButtonProps>
     transform: none;
   }
 }
-
 
 // --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
 "use client";
@@ -255,7 +253,6 @@ export function createActionVisualProps(
   return visual;
 }
 
-
 // --- src/components/vicomponents/demos/squish-button.tsx ---
 "use client";
 
@@ -266,7 +263,6 @@ import { ViSquishButton } from "../components/squish-button";
 export function SquishButtonDemo({ visual }: { visual?: ViVisualProps }) {
   return <ViSquishButton {...visual}>Squish</ViSquishButton>;
 }
-
 
 // --- src/components/vicomponents/demos/demos.css ---
 .vi-route-demo {
@@ -585,6 +581,11 @@ export function SquishButtonDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
+.vi-hold-confirm-demo__label {
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  padding-block: var(--vi-space-2, 0.5rem);
+}
 
 // --- src/components/vicomponents/tokens.css ---
 :root {
@@ -775,7 +776,6 @@ export function SquishButtonDemo({ visual }: { visual?: ViVisualProps }) {
   --vi-color-glass-border: rgb(7 16 7 / 16%);
 }
 
-
 // --- src/components/vicomponents/core/motion-props.ts ---
 export type ViMotionMode = "auto" | "none";
 
@@ -832,7 +832,6 @@ export function resolveViMotionConfig(
     },
   };
 }
-
 
 // --- src/components/vicomponents/core/vi-component-surface.tsx ---
 "use client";
@@ -962,7 +961,6 @@ export const ViComponentSurface = ViComponentSurfaceForwardRef as <
 
 export type { ViComponentSurfaceOwnProps };
 
-
 // --- src/components/vicomponents/core/visual-props.ts ---
 import type { CSSProperties } from "react";
 
@@ -1078,10 +1076,8 @@ export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
   };
 }
 
-
 // --- src/components/vicomponents/components/squish-button/index.ts ---
 export { ViSquishButton, type ViSquishButtonProps } from "./vi-squish-button";
-
 
 // --- src/components/vicomponents/core/vi-component-surface.css ---
 .vi-component-surface {
