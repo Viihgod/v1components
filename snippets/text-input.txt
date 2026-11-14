@@ -1,0 +1,710 @@
+// Complete portable ViTextInput
+// Dependency: npm install @phosphor-icons/react
+// Create each file below, then render <Example />.
+
+// Example.tsx
+import { ViTextInput } from "./vi-text-input";
+
+export default function Example() {
+  return (
+    <ViTextInput
+      label={"Project name"}
+      placeholder={"V1Components"}
+      helperText={"Use a clear, recognizable name."}
+      errorText={"Please review this value."}
+      iconPosition={"left"}
+      size={"md"}
+      invalid={false}
+      required={false}
+      disabled={false}
+    shinyBorder={false}
+    glass={false}
+    radius={"md"}
+    activeColor={"#c3f36b"}
+    standbyColor={"#071007"}
+    activeTextColor={"#010600"}
+    standbyTextColor={"#f3f8f0"}
+    borderColor={"#233a24"}
+    shineColorA={"#f6ffe2"}
+    shineColorB={"#c3f36b"}
+    />
+  );
+}
+
+// vi-text-input.tsx
+"use client";
+
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import {
+  forwardRef,
+  useId,
+  type InputHTMLAttributes,
+} from "react";
+
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  type ViVisualProps,
+} from "./vi-component-config";
+import { ViComponentSurface } from "./vi-component-surface";
+import "./vi-text-input.css";
+
+export const VI_TEXT_INPUT_ICON_POSITIONS = ["none", "left", "right"] as const;
+export const VI_TEXT_INPUT_SIZES = ["sm", "md", "lg"] as const;
+
+export type ViTextInputIconPosition = (typeof VI_TEXT_INPUT_ICON_POSITIONS)[number];
+export type ViTextInputSize = (typeof VI_TEXT_INPUT_SIZES)[number];
+
+export type ViTextInputProps = Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  "color" | "size"
+> &
+  ViVisualProps & {
+    errorText?: string;
+    helperText?: string;
+    iconPosition?: ViTextInputIconPosition;
+    invalid?: boolean;
+    label?: string;
+    size?: ViTextInputSize;
+  };
+
+export const ViTextInput = forwardRef<HTMLInputElement, ViTextInputProps>(
+  function ViTextInput(
+    {
+      activeColor,
+      activeTextColor,
+      borderColor,
+      className = "",
+      disabled = false,
+      errorText = "Please review this value.",
+      glass,
+      helperText = "Use a clear, recognizable name.",
+      iconPosition = "left",
+      id,
+      invalid = false,
+      label = "Project name",
+      radius = "md",
+      required = false,
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      size = "md",
+      standbyColor,
+      standbyTextColor,
+      type = "text",
+      ...inputProps
+    },
+    ref,
+  ) {
+    const generatedId = useId();
+    const inputId = id ?? generatedId;
+    const messageId = `${inputId}-message`;
+    const message = invalid ? errorText : helperText;
+    const visual = createViVisualConfig({
+      activeColor,
+      activeTextColor,
+      borderColor,
+      glass,
+      radius,
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      standbyColor,
+      standbyTextColor,
+    });
+
+    return (
+      <div
+        className={`vi-text-input ${className}`.trim()}
+        data-disabled={disabled}
+        data-invalid={invalid}
+        data-size={size}
+        style={createViVisualStyle(visual)}
+      >
+        <label className="vi-text-input__label" htmlFor={inputId}>
+          {label}
+          {required ? <span aria-hidden="true"> *</span> : null}
+        </label>
+        <ViComponentSurface className="vi-text-input__surface" config={visual} data-vi-suite-hit-area data-disabled={disabled}>
+          <span className="vi-text-input__field">
+            {iconPosition === "left" ? (
+              <MagnifyingGlass className="vi-text-input__icon" aria-hidden="true" />
+            ) : null}
+            <input
+              {...inputProps}
+              ref={ref}
+              id={inputId}
+              type={type}
+              aria-describedby={message ? messageId : undefined}
+              aria-invalid={invalid || undefined}
+              disabled={disabled}
+              required={required}
+            />
+            {iconPosition === "right" ? (
+              <MagnifyingGlass className="vi-text-input__icon" aria-hidden="true" />
+            ) : null}
+          </span>
+        </ViComponentSurface>
+        {message ? (
+          <span className="vi-text-input__message" id={messageId}>
+            {message}
+          </span>
+        ) : null}
+      </div>
+    );
+  },
+);
+
+// vi-component-config.ts
+import type { CSSProperties } from "react";
+
+export const VI_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "pill"] as const;
+
+export type ViRadius = (typeof VI_RADIUS_OPTIONS)[number];
+
+export type ViVisualConfig = {
+  shinyBorder: boolean;
+  glass: boolean;
+  radius: ViRadius;
+  activeColor: string;
+  standbyColor: string;
+  activeTextColor: string;
+  standbyTextColor: string;
+  borderColor: string;
+  shineColorA: string;
+  shineColorB: string;
+};
+
+export type ViVisualProps = Partial<ViVisualConfig>;
+
+export const DEFAULT_VI_VISUAL_CONFIG: ViVisualConfig = {
+  shinyBorder: false,
+  glass: false,
+  radius: "md",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+};
+
+export const GLASS_VI_VISUAL_CONFIG = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+} as const;
+
+export const VI_RADIUS_VALUES: Record<ViRadius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+export type ViVisualStyle = CSSProperties & {
+  "--vi-active": string;
+  "--vi-standby": string;
+  "--vi-active-text": string;
+  "--vi-standby-text": string;
+  "--vi-border": string;
+  "--vi-shine-a": string;
+  "--vi-shine-b": string;
+  "--vi-radius": string;
+  "--color-bg": string;
+  "--color-surface": string;
+  "--color-surface-raised": string;
+  "--color-text": string;
+  "--color-text-muted": string;
+  "--color-quiet-ink": string;
+  "--color-line": string;
+  "--color-clear-lime": string;
+  "--color-accent": string;
+  "--color-accent-soft": string;
+};
+
+export function createViVisualConfig(
+  overrides: ViVisualProps = {},
+): ViVisualConfig {
+  const definedOverrides = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value !== undefined),
+  ) as ViVisualProps;
+
+  return { ...DEFAULT_VI_VISUAL_CONFIG, ...definedOverrides };
+}
+
+export function resolveViPalette(config: ViVisualConfig) {
+  return config.glass ? GLASS_VI_VISUAL_CONFIG : config;
+}
+
+export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
+  const palette = resolveViPalette(config);
+
+  return {
+    "--vi-active": palette.activeColor,
+    "--vi-standby": palette.standbyColor,
+    "--vi-active-text": palette.activeTextColor,
+    "--vi-standby-text": palette.standbyTextColor,
+    "--vi-border": palette.borderColor,
+    "--vi-shine-a": palette.shineColorA,
+    "--vi-shine-b": palette.shineColorB,
+    "--vi-radius": VI_RADIUS_VALUES[config.radius],
+    "--color-bg": palette.standbyColor,
+    "--color-surface": palette.standbyColor,
+    "--color-surface-raised": `color-mix(in srgb, ${palette.standbyColor} 88%, white)`,
+    "--color-text": palette.standbyTextColor,
+    "--color-text-muted": `color-mix(in srgb, ${palette.standbyTextColor} 68%, transparent)`,
+    "--color-quiet-ink": `color-mix(in srgb, ${palette.standbyTextColor} 46%, transparent)`,
+    "--color-line": palette.borderColor,
+    "--color-clear-lime": palette.activeColor,
+    "--color-accent": palette.activeColor,
+    "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
+  };
+}
+
+export function setViHoverOrigin({ currentTarget, clientX, clientY }: {
+  currentTarget: HTMLElement;
+  clientX: number;
+  clientY: number;
+}) {
+  const { left, top, width, height } = currentTarget.getBoundingClientRect();
+  const x = width ? Math.min(1, Math.max(0, (clientX - left) / width)) : 0.5;
+  const y = height ? Math.min(1, Math.max(0, (clientY - top) / height)) : 0.5;
+
+  currentTarget.style.setProperty("--vi-hover-x", (x * 100) + "%");
+  currentTarget.style.setProperty("--vi-hover-y", (y * 100) + "%");
+}
+
+// vi-component-surface.tsx
+"use client";
+
+import type {
+  CSSProperties,
+  ElementType,
+  PointerEvent,
+  PointerEventHandler,
+  ReactNode,
+} from "react";
+
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  type ViVisualConfig,
+  type ViVisualProps,
+} from "./vi-component-config";
+
+type ViSurfaceStyle = CSSProperties & {
+  "--vi-glow-x": string;
+  "--vi-glow-y": string;
+};
+
+type ViComponentSurfaceProps = {
+  as?: ElementType;
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
+  config?: ViVisualConfig;
+  visualProps?: ViVisualProps;
+  hoverGlow?: boolean;
+  hoverGlowStrength?: "soft" | "medium" | "strong";
+  onPointerDown?: PointerEventHandler<HTMLElement>;
+};
+
+export function ViComponentSurface({
+  as: Component = "div",
+  children,
+  className = "",
+  contentClassName = "",
+  config,
+  visualProps,
+  hoverGlow = false,
+  hoverGlowStrength = "medium",
+  onPointerDown,
+}: ViComponentSurfaceProps) {
+  const resolvedConfig = config ?? createViVisualConfig(visualProps);
+
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+
+    event.currentTarget.style.setProperty("--vi-glow-x", `${x.toFixed(2)}%`);
+    event.currentTarget.style.setProperty("--vi-glow-y", `${y.toFixed(2)}%`);
+  }
+
+  const style: ViSurfaceStyle = {
+    ...createViVisualStyle(resolvedConfig),
+    "--vi-glow-x": "50%",
+    "--vi-glow-y": "50%",
+  };
+
+  return (
+    <Component
+      className={`vi-component-surface ${className}`.trim()}
+      data-glass={resolvedConfig.glass}
+      data-hover-glow={hoverGlow}
+      data-hover-glow-strength={hoverGlowStrength}
+      data-shiny={resolvedConfig.shinyBorder}
+      onPointerDown={onPointerDown}
+      onPointerMove={hoverGlow ? handlePointerMove : undefined}
+      style={style}
+    >
+      <span className="vi-component-surface__shine" aria-hidden="true" />
+      <span className="vi-component-surface__hover-glow" aria-hidden="true" />
+      <div className={`vi-component-surface__content ${contentClassName}`.trim()}>
+        {children}
+      </div>
+    </Component>
+  );
+}
+
+// vi-text-input.css
+.vi-component-surface {
+  --vi-font-body: ui-sans-serif, system-ui, sans-serif;
+  --vi-control-height-sm: 2rem;
+  --vi-control-height-md: 2.75rem;
+  --vi-control-height-lg: 3.25rem;
+  --vi-border-width: 1px;
+  --vi-focus-width: 2px;
+  --vi-radius-pill: 999px;
+  --vi-motion-duration-fast: 120ms;
+  --vi-motion-duration-standard: 220ms;
+  --vi-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --vi-surface-border-width: 1px;
+  --vi-surface-shine-duration: 2800ms;
+  --vi-surface-shine-ease: cubic-bezier(0.45, 0, 0.2, 1);
+  --vi-surface-glass-blur: 18px;
+  --vi-surface-glass-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.16);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.vi-component-surface {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: var(--vi-surface-border-width) solid var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+  color: var(--vi-standby-text);
+}
+
+@property --vi-hover-progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@media (hover: hover) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    background-image: radial-gradient(
+      circle farthest-corner at var(--vi-hover-x, 50%) var(--vi-hover-y, 50%),
+      var(--vi-hover-fill, color-mix(in srgb, var(--vi-active) 16%, transparent)) var(--vi-hover-progress, 100%),
+      transparent calc(var(--vi-hover-progress, 100%) + 14%)
+    );
+    animation: vi-hover-fill 340ms var(--vi-motion-ease-out, ease-out) both;
+  }
+}
+
+@keyframes vi-hover-fill {
+  from { --vi-hover-progress: -14%; }
+  to { --vi-hover-progress: 100%; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    animation: none;
+  }
+}
+
+.vi-component-surface.pong-game {
+  border-color: var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+}
+
+.vi-component-surface__shine,
+.vi-component-surface__hover-glow {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vi-component-surface__shine {
+  background: linear-gradient(
+    112deg,
+    transparent 12%,
+    transparent 33%,
+    var(--vi-shine-b) 44%,
+    var(--vi-shine-a) 50%,
+    var(--vi-shine-b) 56%,
+    transparent 67%,
+    transparent 88%
+  ) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+  opacity: 0.92;
+  animation: vi-component-shine var(--vi-surface-shine-duration) var(--vi-surface-shine-ease) infinite;
+}
+
+.vi-component-surface__hover-glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms var(--ease-out);
+}
+
+.vi-component-surface__hover-glow::before,
+.vi-component-surface__hover-glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vi-component-surface__hover-glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(
+      circle at var(--vi-glow-x) var(--vi-glow-y),
+      var(--vi-active) 0,
+      color-mix(in srgb, var(--vi-active) 72%, transparent) 7%,
+      color-mix(in srgb, var(--vi-active) 20%, transparent) 18%,
+      transparent 42%
+    ) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface__hover-glow::after {
+  z-index: 1;
+  background: radial-gradient(
+    circle at var(--vi-glow-x) var(--vi-glow-y),
+    color-mix(in srgb, var(--vi-active) 10%, transparent),
+    transparent 48%
+  );
+}
+
+.vi-component-surface[data-hover-glow="true"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.72;
+}
+
+.vi-component-surface[data-hover-glow-strength="soft"] .vi-component-surface__hover-glow {
+  opacity: 0;
+  filter: saturate(0.75);
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.42;
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 1;
+}
+
+.vi-component-surface[data-glass="true"] {
+  border-color: var(--vi-border);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    var(--vi-standby);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    var(--vi-surface-glass-shadow);
+  -webkit-backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+  backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+}
+
+.vi-component-surface__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@keyframes vi-component-shine {
+  0%,
+  18% {
+    background-position: 145% center;
+  }
+  72%,
+  100% {
+    background-position: -45% center;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vi-component-surface[data-glass="true"] {
+    background: #161b16;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+.vi-text-input {
+  --vi-input-height: var(--vi-control-height-md, 2.75rem);
+  --vi-input-padding-inline: var(--vi-space-3, 0.75rem);
+  --vi-input-gap: var(--vi-space-2, 0.5rem);
+  --vi-input-label-gap: var(--vi-space-2, 0.5rem);
+  --vi-input-message-gap: var(--vi-space-2, 0.5rem);
+  --vi-input-font-size: var(--vi-ref-font-size-md, 0.82rem);
+  --vi-input-label-size: var(--vi-ref-font-size-xs, 0.62rem);
+  --vi-input-message-size: var(--vi-ref-font-size-xs, 0.62rem);
+  --vi-input-icon-size: var(--vi-ref-control-icon-md, 1rem);
+  --vi-input-label-color: var(--vi-standby-text);
+  --vi-input-text-color: var(--vi-standby-text);
+  --vi-input-placeholder-color: color-mix(in srgb, var(--vi-standby-text) 42%, transparent);
+  --vi-input-message-color: color-mix(in srgb, var(--vi-standby-text) 58%, transparent);
+  --vi-input-focus-color: var(--vi-active);
+  --vi-input-error-color: var(--vi-color-danger, #ff8095);
+  --vi-input-disabled-opacity: 0.42;
+  display: grid;
+  gap: 0;
+  width: min(100%, 20rem);
+  color: var(--vi-input-text-color);
+}
+
+.vi-text-input[data-size="sm"] {
+  --vi-input-height: var(--vi-control-height-sm, 2rem);
+  --vi-input-padding-inline: var(--vi-space-2, 0.5rem);
+  --vi-input-font-size: var(--vi-ref-font-size-sm, 0.72rem);
+  --vi-input-icon-size: var(--vi-ref-control-icon-sm, 0.875rem);
+}
+
+.vi-text-input[data-size="lg"] {
+  --vi-input-height: var(--vi-control-height-lg, 3.25rem);
+  --vi-input-padding-inline: var(--vi-space-4, 1rem);
+  --vi-input-font-size: var(--vi-ref-font-size-lg, 1rem);
+  --vi-input-icon-size: var(--vi-ref-control-icon-lg, 1.25rem);
+}
+
+.vi-text-input__label {
+  margin-bottom: var(--vi-input-label-gap);
+  color: var(--vi-input-label-color);
+  font-family: var(--vi-font-code, ui-monospace, monospace);
+  font-size: var(--vi-input-label-size);
+  font-weight: 700;
+  letter-spacing: var(--vi-ref-letter-spacing-label, 0.07em);
+  line-height: var(--vi-ref-line-height-control, 1.2);
+  text-transform: uppercase;
+}
+
+.vi-text-input__label > span {
+  color: var(--vi-active);
+}
+
+.vi-text-input__surface {
+  width: 100%;
+  transition:
+    border-color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    box-shadow var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-text-input__field {
+  display: flex;
+  height: var(--vi-input-height);
+  align-items: center;
+  gap: var(--vi-input-gap);
+  padding: 0 var(--vi-input-padding-inline);
+}
+
+.vi-text-input__field input {
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--vi-input-text-color);
+  font-family: var(--vi-font-body, ui-sans-serif, system-ui, sans-serif);
+  font-size: var(--vi-input-font-size);
+  line-height: var(--vi-ref-line-height-control, 1.2);
+  outline: 0;
+}
+
+.vi-text-input__field input::placeholder {
+  color: var(--vi-input-placeholder-color);
+  opacity: 1;
+}
+
+.vi-text-input__icon {
+  width: var(--vi-input-icon-size);
+  height: var(--vi-input-icon-size);
+  flex: 0 0 auto;
+  color: var(--vi-input-message-color);
+  transition: color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-text-input__message {
+  margin-top: var(--vi-input-message-gap);
+  color: var(--vi-input-message-color);
+  font-family: var(--vi-font-body, ui-sans-serif, system-ui, sans-serif);
+  font-size: var(--vi-input-message-size);
+  line-height: var(--vi-ref-line-height-body, 1.5);
+}
+
+.vi-text-input:focus-within .vi-text-input__surface {
+  border-color: var(--vi-input-focus-color);
+  box-shadow: 0 0 0 var(--vi-focus-width, 2px) color-mix(in srgb, var(--vi-input-focus-color) 16%, transparent);
+}
+
+.vi-text-input:focus-within .vi-text-input__icon {
+  color: var(--vi-input-focus-color);
+}
+
+.vi-text-input[data-invalid="true"] .vi-text-input__surface {
+  border-color: var(--vi-input-error-color);
+}
+
+.vi-text-input[data-invalid="true"] .vi-text-input__message,
+.vi-text-input[data-invalid="true"] .vi-text-input__icon {
+  color: var(--vi-input-error-color);
+}
+
+.vi-text-input[data-disabled="true"] {
+  cursor: not-allowed;
+  opacity: var(--vi-input-disabled-opacity);
+}
+
+.vi-text-input[data-disabled="true"] input {
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-text-input__surface,
+  .vi-text-input__icon {
+    transition-duration: 0.01ms;
+  }
+}

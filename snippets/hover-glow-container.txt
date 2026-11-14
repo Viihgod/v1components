@@ -1,0 +1,279 @@
+// Complete portable component
+// Dependency: npm install motion
+
+// HoverGlowContainer.tsx
+"use client";
+
+import type { CSSProperties, PointerEvent, ReactNode } from "react";
+import "./HoverGlowContainer.css";
+
+export type Radius = "none" | "sm" | "md" | "lg" | "pill";
+
+export type VisualProps = {
+  shinyBorder?: boolean;
+  glass?: boolean;
+  radius?: Radius;
+  activeColor?: string;
+  standbyColor?: string;
+  activeTextColor?: string;
+  standbyTextColor?: string;
+  borderColor?: string;
+  shineColorA?: string;
+  shineColorB?: string;
+};
+
+type ResolvedVisualProps = Required<VisualProps>;
+
+type VisualCSSProperties = CSSProperties & {
+  "--vc-active": string;
+  "--vc-standby": string;
+  "--vc-active-text": string;
+  "--vc-standby-text": string;
+  "--vc-border": string;
+  "--vc-shine-a": string;
+  "--vc-shine-b": string;
+  "--vc-radius": string;
+  "--vc-glow-x": string;
+  "--vc-glow-y": string;
+};
+
+const RADIUS: Record<Radius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+const GLASS_PALETTE = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+};
+
+function visualStyle(props: ResolvedVisualProps): VisualCSSProperties {
+  const palette = props.glass ? GLASS_PALETTE : props;
+
+  return {
+    "--vc-active": palette.activeColor,
+    "--vc-standby": palette.standbyColor,
+    "--vc-active-text": palette.activeTextColor,
+    "--vc-standby-text": palette.standbyTextColor,
+    "--vc-border": palette.borderColor,
+    "--vc-shine-a": palette.shineColorA,
+    "--vc-shine-b": palette.shineColorB,
+    "--vc-radius": RADIUS[props.radius],
+    "--vc-glow-x": "50%",
+    "--vc-glow-y": "50%",
+  };
+}
+
+function VisualSurface({
+  children,
+  className = "",
+  glowStrength = "medium",
+  hoverGlow = false,
+  visual,
+}: {
+  children: ReactNode;
+  className?: string;
+  glowStrength?: "soft" | "medium" | "strong";
+  hoverGlow?: boolean;
+  visual: ResolvedVisualProps;
+}) {
+  function trackPointer(event: PointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+    event.currentTarget.style.setProperty("--vc-glow-x", x.toFixed(2) + "%");
+    event.currentTarget.style.setProperty("--vc-glow-y", y.toFixed(2) + "%");
+  }
+
+  return (
+    <div
+      className={("vc-surface " + className).trim()}
+      data-glass={visual.glass}
+      data-hover-glow={hoverGlow}
+      data-hover-glow-strength={glowStrength}
+      data-shiny={visual.shinyBorder}
+      onPointerMove={hoverGlow ? trackPointer : undefined}
+      style={visualStyle(visual)}
+    >
+      <span className="vc-surface__shine" aria-hidden="true" />
+      <span className="vc-surface__glow" aria-hidden="true" />
+      <div className="vc-surface__content">{children}</div>
+    </div>
+  );
+}
+
+const DEFAULT_VISUAL = {
+  shinyBorder: true,
+  glass: false,
+  radius: "none",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+} satisfies Required<VisualProps>;
+
+export type HoverGlowContainerProps = VisualProps & {
+  children?: ReactNode;
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  hoverGlow?: boolean;
+  glowStrength?: "soft" | "medium" | "strong";
+};
+
+export function HoverGlowContainer({
+  children,
+  eyebrow = "Selected work",
+  title = "A focused surface for important content.",
+  description = "The border follows the pointer while the inner glow keeps the response spatial.",
+  hoverGlow = true,
+  glowStrength = "medium",
+  ...visualProps
+}: HoverGlowContainerProps) {
+  const visual = { ...DEFAULT_VISUAL, ...visualProps };
+
+  return (
+    <VisualSurface className="hover-glow-container" glowStrength={glowStrength} hoverGlow={hoverGlow} visual={visual}>
+      {children ?? (
+        <article>
+          <span>{eyebrow}</span>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </article>
+      )}
+    </VisualSurface>
+  );
+}
+
+// HoverGlowContainer.css
+.vc-surface {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--vc-border);
+  border-radius: var(--vc-radius);
+  background: var(--vc-standby);
+  color: var(--vc-standby-text);
+}
+
+.vc-surface__shine,
+.vc-surface__glow {
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vc-surface__shine {
+  z-index: 2;
+  background: linear-gradient(112deg, transparent 12%, transparent 33%, var(--vc-shine-b) 44%, var(--vc-shine-a) 50%, var(--vc-shine-b) 56%, transparent 67%, transparent 88%) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vc-surface[data-shiny="true"] .vc-surface__shine {
+  opacity: 0.92;
+  animation: vc-shine 2.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.vc-surface__glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.vc-surface__glow::before,
+.vc-surface__glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vc-surface__glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background: radial-gradient(circle at var(--vc-glow-x) var(--vc-glow-y), var(--vc-active) 0, color-mix(in srgb, var(--vc-active) 72%, transparent) 7%, color-mix(in srgb, var(--vc-active) 20%, transparent) 18%, transparent 42%) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vc-surface__glow::after {
+  z-index: 1;
+  background: radial-gradient(circle at var(--vc-glow-x) var(--vc-glow-y), color-mix(in srgb, var(--vc-active) 10%, transparent), transparent 48%);
+}
+
+.vc-surface[data-hover-glow="true"]:hover .vc-surface__glow,
+.vc-surface[data-hover-glow="true"]:focus-within .vc-surface__glow {
+  opacity: 0.72;
+}
+
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vc-surface__glow,
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vc-surface__glow {
+  opacity: 0.42;
+}
+
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vc-surface__glow,
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vc-surface__glow {
+  opacity: 1;
+}
+
+.vc-surface[data-glass="true"] {
+  background: linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.025)), var(--vc-standby);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(255,255,255,.035), 0 1rem 2.5rem rgba(0,0,0,.16);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+.vc-surface__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@keyframes vc-shine {
+  0%, 18% { background-position: 145% center; }
+  72%, 100% { background-position: -45% center; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vc-surface[data-glass="true"] { background: #161b16; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-surface[data-shiny="true"] .vc-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+.hover-glow-container { width: min(100%, 30rem); transition: transform 420ms cubic-bezier(.23,1,.32,1), background-color 220ms ease; }
+.hover-glow-container:hover { transform: translateY(-5px); }
+.hover-glow-container article { min-height: 14rem; padding: 1.25rem; }
+.hover-glow-container article > span { color: var(--vc-active); font: 700 .65rem/1.4 ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.hover-glow-container h3 { max-width: 18ch; margin: 2.5rem 0 0; color: var(--vc-standby-text); font-size: 1.35rem; line-height: 1.05; }
+.hover-glow-container p { max-width: 36ch; margin: .85rem 0 0; color: color-mix(in srgb, var(--vc-standby-text) 68%, transparent); font-size: .9rem; line-height: 1.5; }

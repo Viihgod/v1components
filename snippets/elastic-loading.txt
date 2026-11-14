@@ -1,0 +1,352 @@
+// Complete portable component
+// Dependency: npm install motion
+
+// ElasticLoading.tsx
+"use client";
+
+import { motion, useReducedMotion } from "motion/react";
+import { useState, type CSSProperties, type PointerEvent, type ReactNode } from "react";
+import "./ElasticLoading.css";
+
+export type Radius = "none" | "sm" | "md" | "lg" | "pill";
+
+export type VisualProps = {
+  shinyBorder?: boolean;
+  glass?: boolean;
+  radius?: Radius;
+  activeColor?: string;
+  standbyColor?: string;
+  activeTextColor?: string;
+  standbyTextColor?: string;
+  borderColor?: string;
+  shineColorA?: string;
+  shineColorB?: string;
+};
+
+type ResolvedVisualProps = Required<VisualProps>;
+
+type VisualCSSProperties = CSSProperties & {
+  "--vc-active": string;
+  "--vc-standby": string;
+  "--vc-active-text": string;
+  "--vc-standby-text": string;
+  "--vc-border": string;
+  "--vc-shine-a": string;
+  "--vc-shine-b": string;
+  "--vc-radius": string;
+  "--vc-glow-x": string;
+  "--vc-glow-y": string;
+};
+
+const RADIUS: Record<Radius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+const GLASS_PALETTE = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+};
+
+function visualStyle(props: ResolvedVisualProps): VisualCSSProperties {
+  const palette = props.glass ? GLASS_PALETTE : props;
+
+  return {
+    "--vc-active": palette.activeColor,
+    "--vc-standby": palette.standbyColor,
+    "--vc-active-text": palette.activeTextColor,
+    "--vc-standby-text": palette.standbyTextColor,
+    "--vc-border": palette.borderColor,
+    "--vc-shine-a": palette.shineColorA,
+    "--vc-shine-b": palette.shineColorB,
+    "--vc-radius": RADIUS[props.radius],
+    "--vc-glow-x": "50%",
+    "--vc-glow-y": "50%",
+  };
+}
+
+function VisualSurface({
+  children,
+  className = "",
+  glowStrength = "medium",
+  hoverGlow = false,
+  visual,
+}: {
+  children: ReactNode;
+  className?: string;
+  glowStrength?: "soft" | "medium" | "strong";
+  hoverGlow?: boolean;
+  visual: ResolvedVisualProps;
+}) {
+  function trackPointer(event: PointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+    event.currentTarget.style.setProperty("--vc-glow-x", x.toFixed(2) + "%");
+    event.currentTarget.style.setProperty("--vc-glow-y", y.toFixed(2) + "%");
+  }
+
+  return (
+    <div
+      className={("vc-surface " + className).trim()}
+      data-glass={visual.glass}
+      data-hover-glow={hoverGlow}
+      data-hover-glow-strength={glowStrength}
+      data-shiny={visual.shinyBorder}
+      onPointerMove={hoverGlow ? trackPointer : undefined}
+      style={visualStyle(visual)}
+    >
+      <span className="vc-surface__shine" aria-hidden="true" />
+      <span className="vc-surface__glow" aria-hidden="true" />
+      <div className="vc-surface__content">{children}</div>
+    </div>
+  );
+}
+
+function setViHoverOrigin({ currentTarget, clientX, clientY }: {
+  currentTarget: HTMLElement;
+  clientX: number;
+  clientY: number;
+}) {
+  const { left, top, width, height } = currentTarget.getBoundingClientRect();
+  const x = width ? Math.min(1, Math.max(0, (clientX - left) / width)) : 0.5;
+  const y = height ? Math.min(1, Math.max(0, (clientY - top) / height)) : 0.5;
+
+  currentTarget.style.setProperty("--vi-hover-x", (x * 100) + "%");
+  currentTarget.style.setProperty("--vi-hover-y", (y * 100) + "%");
+}
+
+const DEFAULT_VISUAL = {
+  shinyBorder: false,
+  glass: false,
+  radius: "pill",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+} satisfies Required<VisualProps>;
+
+export type ElasticLoadingProps = VisualProps & {
+  idleLabel?: string;
+  loadingLabel?: string;
+  dotCount?: number;
+  onLoadingChange?: (loading: boolean) => void;
+};
+
+export function ElasticLoading({
+  idleLabel = "Start loading",
+  loadingLabel = "Loading",
+  dotCount = 3,
+  onLoadingChange,
+  ...visualProps
+}: ElasticLoadingProps) {
+  const [loading, setLoading] = useState(false);
+  const [hoverWave, setHoverWave] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const visual = { ...DEFAULT_VISUAL, ...visualProps };
+  const safeDotCount = Math.max(1, Math.min(9, Math.round(dotCount)));
+
+  function toggle() {
+    const next = !loading;
+    setHoverWave(false);
+    setLoading(next);
+    onLoadingChange?.(next);
+  }
+
+  return (
+    <VisualSurface className="elastic-loading" visual={visual}>
+      <motion.button
+        type="button"
+        data-loading={loading}
+        data-vi-hover
+        data-hover-wave={hoverWave}
+        onPointerEnter={(event) => {
+          setViHoverOrigin(event);
+          setHoverWave(!loading);
+        }}
+        onPointerLeave={() => setHoverWave(false)}
+        onClick={toggle}
+        whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+      >
+        <span>{loading ? loadingLabel : idleLabel}</span>
+        <span className="elastic-loading__dots" aria-hidden="true">
+          {Array.from({ length: safeDotCount }, (_, index) => (
+            <span key={index} style={{ animationDelay: (index * 100) + "ms" }} />
+          ))}
+        </span>
+      </motion.button>
+    </VisualSurface>
+  );
+}
+
+// ElasticLoading.css
+.vc-surface {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--vc-border);
+  border-radius: var(--vc-radius);
+  background: var(--vc-standby);
+  color: var(--vc-standby-text);
+}
+
+.vc-surface__shine,
+.vc-surface__glow {
+  position: absolute;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vc-surface__shine {
+  z-index: 2;
+  background: linear-gradient(112deg, transparent 12%, transparent 33%, var(--vc-shine-b) 44%, var(--vc-shine-a) 50%, var(--vc-shine-b) 56%, transparent 67%, transparent 88%) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vc-surface[data-shiny="true"] .vc-surface__shine {
+  opacity: 0.92;
+  animation: vc-shine 2.8s cubic-bezier(0.45, 0, 0.2, 1) infinite;
+}
+
+.vc-surface__glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.vc-surface__glow::before,
+.vc-surface__glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vc-surface__glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background: radial-gradient(circle at var(--vc-glow-x) var(--vc-glow-y), var(--vc-active) 0, color-mix(in srgb, var(--vc-active) 72%, transparent) 7%, color-mix(in srgb, var(--vc-active) 20%, transparent) 18%, transparent 42%) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vc-surface__glow::after {
+  z-index: 1;
+  background: radial-gradient(circle at var(--vc-glow-x) var(--vc-glow-y), color-mix(in srgb, var(--vc-active) 10%, transparent), transparent 48%);
+}
+
+.vc-surface[data-hover-glow="true"]:hover .vc-surface__glow,
+.vc-surface[data-hover-glow="true"]:focus-within .vc-surface__glow {
+  opacity: 0.72;
+}
+
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vc-surface__glow,
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vc-surface__glow {
+  opacity: 0.42;
+}
+
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vc-surface__glow,
+.vc-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vc-surface__glow {
+  opacity: 1;
+}
+
+.vc-surface[data-glass="true"] {
+  background: linear-gradient(145deg, rgba(255,255,255,.085), rgba(255,255,255,.025)), var(--vc-standby);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 0 rgba(255,255,255,.035), 0 1rem 2.5rem rgba(0,0,0,.16);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+.vc-surface__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@keyframes vc-shine {
+  0%, 18% { background-position: 145% center; }
+  72%, 100% { background-position: -45% center; }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vc-surface[data-glass="true"] { background: #161b16; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vc-surface[data-shiny="true"] .vc-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+@property --vi-hover-progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@media (hover: hover) {
+  [data-vi-hover]:hover:not(:disabled, .sliding-pill__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover > .sliding-pill__active {
+    background-image: radial-gradient(
+      circle farthest-corner at var(--vi-hover-x, 50%) var(--vi-hover-y, 50%),
+      var(--vi-hover-fill, color-mix(in srgb, var(--vc-active) 16%, transparent)) var(--vi-hover-progress, 100%),
+      transparent calc(var(--vi-hover-progress, 100%) + 14%)
+    );
+    animation: vi-hover-fill 340ms var(--vi-motion-ease-out, ease-out) both;
+  }
+}
+
+@keyframes vi-hover-fill {
+  from { --vi-hover-progress: -14%; }
+  to { --vi-hover-progress: 100%; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  [data-vi-hover]:hover:not(:disabled, .sliding-pill__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover > .sliding-pill__active {
+    animation: none;
+  }
+}
+
+.elastic-loading { display: inline-block; }
+.elastic-loading button { display: inline-flex; min-height: 2.65rem; align-items: center; gap: .65rem; padding: .65rem .95rem; border: 0; border-radius: max(0px, calc(var(--vc-radius) - 1px)); background: transparent; color: var(--vc-standby-text); cursor: pointer; }
+.elastic-loading button[data-loading="true"] { --vi-hover-fill: color-mix(in srgb, var(--vc-active-text) 12%, transparent); background: var(--vc-active); color: var(--vc-active-text); }
+.elastic-loading__dots { display: inline-flex; gap: .22rem; }
+.elastic-loading__dots > span { width: .28rem; height: .28rem; border-radius: 50%; background: currentColor; }
+@keyframes vi-loading-wave {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-5px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .elastic-loading button[data-loading="true"] .elastic-loading__dots > span { animation: vi-loading-wave 750ms ease-in-out infinite; }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .elastic-loading button[data-hover-wave="true"]:hover .elastic-loading__dots > span { animation: vi-loading-wave 900ms ease-in-out 1; }
+}

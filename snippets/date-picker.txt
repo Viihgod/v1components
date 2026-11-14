@@ -1,0 +1,1313 @@
+// Complete portable ViDatePicker
+// Dependencies: npm install @phosphor-icons/react motion
+// Create each file below, then render <Example />.
+
+// Example.tsx
+import { ViDatePicker } from "./vi-date-picker";
+
+export default function Example() {
+  return (
+    <ViDatePicker
+      label={"Due date"}
+      placeholder={"Choose a date"}
+      defaultValue={"2026-09-02"}
+      locale={"en-US"}
+      weekStartsOn={"monday"}
+      showOutsideDays={true}
+      clearable={true}
+      closeOnSelect={true}
+      size={"md"}
+      disabled={false}
+    shinyBorder={false}
+    glass={false}
+    radius={"md"}
+    activeColor={"#c3f36b"}
+    standbyColor={"#071007"}
+    activeTextColor={"#010600"}
+    standbyTextColor={"#f3f8f0"}
+    borderColor={"#233a24"}
+    shineColorA={"#f6ffe2"}
+    shineColorB={"#c3f36b"}
+    />
+  );
+}
+
+// vi-date-picker.tsx
+"use client";
+
+import {
+  CalendarBlank,
+  CaretDown,
+  CaretLeft,
+  CaretRight,
+  X,
+} from "@phosphor-icons/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+} from "react";
+
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  setViHoverOrigin,
+  type ViVisualProps,
+} from "./vi-component-config";
+import { ViComponentSurface } from "./vi-component-surface";
+import {
+  addDays,
+  addMonths,
+  formatLongDate,
+  formatMonthLabel,
+  formatSelectedDate,
+  getCalendarDays,
+  getWeekEdge,
+  getWeekdayLabels,
+  isSameDay,
+  isSameMonth,
+  normalizeIsoDate,
+  normalizeViDateRange,
+  type ViDateRange,
+  parseIsoDate,
+  toIsoDate,
+  type ViDatePickerLocale,
+  type ViWeekStartsOn,
+} from "./vi-date-picker-utils";
+import "./vi-date-picker.css";
+
+export const VI_DATE_PICKER_SIZES = ["sm", "md", "lg"] as const;
+export const VI_DATE_PICKER_LOCALES = ["en-US", "pt-BR"] as const;
+export const VI_DATE_PICKER_WEEK_STARTS = ["sunday", "monday"] as const;
+
+export type ViDatePickerSize = (typeof VI_DATE_PICKER_SIZES)[number];
+
+export type ViDatePickerProps = ViVisualProps & {
+  className?: string;
+  clearable?: boolean;
+  closeOnSelect?: boolean;
+  defaultRange?: ViDateRange;
+  defaultValue?: string;
+  disabled?: boolean;
+  id?: string;
+  label?: string;
+  locale?: ViDatePickerLocale;
+  name?: string;
+  onRangeChange?: (range: ViDateRange) => void;
+  onValueChange?: (value: string) => void;
+  placeholder?: string;
+  rangeValue?: ViDateRange;
+  selectionMode?: "single" | "range";
+  showOutsideDays?: boolean;
+  size?: ViDatePickerSize;
+  value?: string;
+  weekStartsOn?: ViWeekStartsOn;
+};
+
+export function ViDatePicker({
+  activeColor,
+  activeTextColor,
+  borderColor,
+  className = "",
+  clearable = true,
+  closeOnSelect = true,
+  defaultRange,
+  defaultValue = "",
+  disabled = false,
+  glass,
+  id,
+  label = "Due date",
+  locale = "en-US",
+  name,
+  onRangeChange,
+  onValueChange,
+  placeholder = "Choose a date",
+  radius = "md",
+  rangeValue,
+  selectionMode = "single",
+  shineColorA,
+  shineColorB,
+  shinyBorder,
+  showOutsideDays = true,
+  size = "md",
+  standbyColor,
+  standbyTextColor,
+  value,
+  weekStartsOn = "monday",
+}: ViDatePickerProps) {
+  const generatedId = useId();
+  const pickerId = id ?? generatedId;
+  const popoverId = `${pickerId}-popover`;
+  const monthLabelId = `${pickerId}-month`;
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const focusFrame = useRef<number | null>(null);
+  const dayRefs = useRef(new Map<string, HTMLButtonElement>());
+  const reducedMotion = useReducedMotion();
+  const controlled = value !== undefined;
+  const initialValue = normalizeIsoDate(defaultValue);
+  const [internalValue, setInternalValue] = useState(initialValue);
+  const rangeMode = selectionMode === "range";
+  const [internalRange, setInternalRange] = useState(() => normalizeViDateRange(defaultRange));
+  const range = normalizeViDateRange(rangeValue ?? internalRange);
+  const selectedValue = rangeMode ? range.start : normalizeIsoDate(controlled ? value : internalValue);
+  const endDate = rangeMode ? parseIsoDate(range.end) : null;
+  const selectedDate = selectedValue ? parseIsoDate(selectedValue) : null;
+  const initialAnchor = selectedDate ?? new Date();
+  const [viewDate, setViewDate] = useState(initialAnchor);
+  const [activeDate, setActiveDate] = useState(initialAnchor);
+  const [open, setOpen] = useState(false);
+  const calendarDays = getCalendarDays(viewDate, weekStartsOn);
+  const weekdayLabels = getWeekdayLabels(locale, weekStartsOn);
+  const today = new Date();
+  const localeCopy = locale === "pt-BR"
+    ? { clear: "Limpar", next: "Próximo mês", previous: "Mês anterior" }
+    : { clear: "Clear", next: "Next month", previous: "Previous month" };
+  const visual = createViVisualConfig({
+    activeColor,
+    activeTextColor,
+    borderColor,
+    glass,
+    radius,
+    shineColorA,
+    shineColorB,
+    shinyBorder,
+    standbyColor,
+    standbyTextColor,
+  });
+
+  useEffect(() => () => {
+    if (focusFrame.current !== null) window.cancelAnimationFrame(focusFrame.current);
+  }, []);
+
+  function scheduleDayFocus(date: Date) {
+    if (focusFrame.current !== null) window.cancelAnimationFrame(focusFrame.current);
+    focusFrame.current = window.requestAnimationFrame(() => {
+      focusFrame.current = null;
+      dayRefs.current.get(toIsoDate(date))?.focus();
+    });
+  }
+
+  function focusDay(nextDate: Date) {
+    setActiveDate(nextDate);
+    if (!isSameMonth(nextDate, viewDate)) setViewDate(nextDate);
+
+    scheduleDayFocus(nextDate);
+  }
+
+  function openCalendar() {
+    const anchor = selectedDate ?? new Date();
+    setViewDate(anchor);
+    setActiveDate(anchor);
+    setOpen(true);
+
+    scheduleDayFocus(anchor);
+  }
+
+  function closeCalendar() {
+    if (focusFrame.current !== null) {
+      window.cancelAnimationFrame(focusFrame.current);
+      focusFrame.current = null;
+    }
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  function updateValue(nextValue: string) {
+    if (!controlled) setInternalValue(nextValue);
+    onValueChange?.(nextValue);
+  }
+
+  function updateRange(nextRange: ViDateRange) {
+    if (rangeValue === undefined) setInternalRange(nextRange);
+    onRangeChange?.(nextRange);
+  }
+
+  function selectDate(nextDate: Date) {
+    const dateKey = toIsoDate(nextDate);
+    const completingRange = Boolean(range.start && !range.end);
+    if (rangeMode) {
+      updateRange(completingRange
+        ? normalizeViDateRange({ start: range.start, end: dateKey })
+        : { start: dateKey, end: "" });
+    } else {
+      updateValue(dateKey);
+    }
+    setActiveDate(nextDate);
+    setViewDate(nextDate);
+    if (closeOnSelect && (!rangeMode || completingRange)) closeCalendar();
+    else if (rangeMode) focusDay(nextDate);
+  }
+
+  function clearDate() {
+    if (rangeMode) updateRange({ start: "", end: "" });
+    else updateValue("");
+    closeCalendar();
+  }
+
+  function moveMonth(amount: number) {
+    const nextDate = addMonths(activeDate, amount);
+    setActiveDate(nextDate);
+    setViewDate(nextDate);
+  }
+
+  function handleDayKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    date: Date,
+  ) {
+    let nextDate: Date | null = null;
+
+    if (event.key === "ArrowLeft") nextDate = addDays(date, -1);
+    else if (event.key === "ArrowRight") nextDate = addDays(date, 1);
+    else if (event.key === "ArrowUp") nextDate = addDays(date, -7);
+    else if (event.key === "ArrowDown") nextDate = addDays(date, 7);
+    else if (event.key === "Home") nextDate = getWeekEdge(date, "start", weekStartsOn);
+    else if (event.key === "End") nextDate = getWeekEdge(date, "end", weekStartsOn);
+    else if (event.key === "PageUp") nextDate = addMonths(date, event.shiftKey ? -12 : -1);
+    else if (event.key === "PageDown") nextDate = addMonths(date, event.shiftKey ? 12 : 1);
+    else if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      selectDate(date);
+      return;
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      closeCalendar();
+      return;
+    }
+
+    if (nextDate) {
+      event.preventDefault();
+      focusDay(nextDate);
+    }
+  }
+
+  function handleBlur(event: FocusEvent<HTMLDivElement>) {
+    if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+  }
+
+  return (
+    <div
+      className={`vi-date-picker ${className}`.trim()}
+      data-disabled={disabled}
+      data-size={size}
+      onBlur={handleBlur}
+      style={createViVisualStyle(visual)}
+    >
+      <span className="vi-date-picker__label" id={`${pickerId}-label`}>
+        {label}
+      </span>
+      <ViComponentSurface className="vi-date-picker__trigger-surface" config={visual}>
+        <button
+          ref={triggerRef}
+          className="vi-date-picker__trigger"
+          data-vi-hover
+          onPointerEnter={setViHoverOrigin}
+          type="button"
+          aria-controls={popoverId}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-labelledby={`${pickerId}-label ${pickerId}-value`}
+          disabled={disabled}
+          onClick={() => (open ? setOpen(false) : openCalendar())}
+        >
+          <CalendarBlank className="vi-date-picker__calendar-icon" aria-hidden="true" />
+          <span id={`${pickerId}-value`} data-placeholder={!selectedDate}>
+            {selectedDate ? formatSelectedDate(selectedDate, locale) : placeholder}
+            {endDate && range.end !== range.start ? " – " + formatSelectedDate(endDate, locale) : null}
+          </span>
+          <CaretDown className="vi-date-picker__caret" data-open={open} aria-hidden="true" />
+        </button>
+      </ViComponentSurface>
+
+      <AnimatePresence>
+        {open ? (
+          <motion.div
+            className="vi-date-picker__popover"
+            initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -6, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4, scale: 0.99 }}
+            transition={{ duration: reducedMotion ? 0.08 : 0.16, ease: [0.23, 1, 0.32, 1] }}
+          >
+            <ViComponentSurface className="vi-date-picker__panel-surface" config={visual}>
+              <div
+                className="vi-date-picker__panel"
+                id={popoverId}
+                role="dialog"
+                aria-label={label}
+              >
+                <div className="vi-date-picker__month-nav">
+                  <button
+                    className="vi-date-picker__nav-button"
+                    data-vi-hover
+                    onPointerEnter={setViHoverOrigin}
+                    type="button"
+                    aria-label={localeCopy.previous}
+                    onClick={() => moveMonth(-1)}
+                  >
+                    <CaretLeft aria-hidden="true" />
+                  </button>
+                  <strong id={monthLabelId} aria-live="polite">
+                    {formatMonthLabel(viewDate, locale)}
+                  </strong>
+                  <button
+                    className="vi-date-picker__nav-button"
+                    data-vi-hover
+                    onPointerEnter={setViHoverOrigin}
+                    type="button"
+                    aria-label={localeCopy.next}
+                    onClick={() => moveMonth(1)}
+                  >
+                    <CaretRight aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="vi-date-picker__calendar" role="grid" aria-labelledby={monthLabelId} aria-multiselectable={rangeMode || undefined}>
+                  <div className="vi-date-picker__weekdays" role="row">
+                    {weekdayLabels.map((weekday) => (
+                      <span key={weekday.long} role="columnheader" aria-label={weekday.long}>
+                        <span aria-hidden="true">{weekday.short}</span>
+                      </span>
+                    ))}
+                  </div>
+
+                  {Array.from({ length: 6 }, (_, weekIndex) => (
+                    <div className="vi-date-picker__week" role="row" key={weekIndex}>
+                      {calendarDays.slice(weekIndex * 7, weekIndex * 7 + 7).map((date, dayIndex) => {
+                        const dateKey = toIsoDate(date);
+                        const outside = !isSameMonth(date, viewDate);
+
+                        if (outside && !showOutsideDays) {
+                          return <span className="vi-date-picker__empty-day" role="gridcell" key={dateKey} />;
+                        }
+
+                        const endpoint = dateKey === selectedValue || (rangeMode && dateKey === range.end);
+                        const between = rangeMode && dateKey > range.start && dateKey < range.end;
+                        const inRange = rangeMode && Boolean(range.end) && (endpoint || between);
+                        const canJoin = (offset: number) => showOutsideDays || isSameMonth(addDays(date, offset), viewDate);
+
+                        return (
+                          <button
+                            key={dateKey}
+                            ref={(node) => {
+                              if (node) dayRefs.current.set(dateKey, node);
+                              else dayRefs.current.delete(dateKey);
+                            }}
+                            className="vi-date-picker__day"
+                            type="button"
+                            role="gridcell"
+                            aria-current={isSameDay(date, today) ? "date" : undefined}
+                            aria-label={formatLongDate(date, locale)}
+                            aria-selected={endpoint || between}
+                            data-outside={outside}
+                            data-selected={endpoint}
+                            data-range-middle={between}
+                            data-range-before={inRange && dayIndex > 0 && dateKey > range.start && canJoin(-1)}
+                            data-range-after={inRange && dayIndex < 6 && dateKey < range.end && canJoin(1)}
+                            data-vi-hover
+                            onPointerEnter={setViHoverOrigin}
+                            data-today={isSameDay(date, today)}
+                            tabIndex={isSameDay(date, activeDate) ? 0 : -1}
+                            onClick={() => selectDate(date)}
+                            onKeyDown={(event) => handleDayKeyDown(event, date)}
+                          >
+                            <span>{date.getDate()}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+
+                {clearable && selectedDate ? (
+                  <button className="vi-date-picker__clear" data-vi-hover onPointerEnter={setViHoverOrigin} type="button" onClick={clearDate}>
+                    <X aria-hidden="true" />
+                    {localeCopy.clear}
+                  </button>
+                ) : null}
+              </div>
+            </ViComponentSurface>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {name ? <input type="hidden" name={name} value={rangeMode && range.end ? range.start + "/" + range.end : selectedValue} disabled={disabled} /> : null}
+    </div>
+  );
+}
+
+// vi-date-picker-utils.ts
+export type ViDatePickerLocale = "en-US" | "pt-BR";
+export type ViWeekStartsOn = "sunday" | "monday";
+
+function createLocalDate(year: number, month: number, day: number) {
+  return new Date(year, month, day, 12, 0, 0, 0);
+}
+
+export function parseIsoDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = createLocalDate(year, month, day);
+
+  if (
+    date.getFullYear() !== year
+    || date.getMonth() !== month
+    || date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
+}
+
+export function toIsoDate(date: Date) {
+  const year = String(date.getFullYear()).padStart(4, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function normalizeIsoDate(value: string | undefined) {
+  const parsed = value ? parseIsoDate(value) : null;
+  return parsed ? toIsoDate(parsed) : "";
+}
+
+export function addDays(date: Date, amount: number) {
+  return createLocalDate(date.getFullYear(), date.getMonth(), date.getDate() + amount);
+}
+
+export function addMonths(date: Date, amount: number) {
+  const targetFirst = createLocalDate(date.getFullYear(), date.getMonth() + amount, 1);
+  const targetLast = createLocalDate(
+    targetFirst.getFullYear(),
+    targetFirst.getMonth() + 1,
+    0,
+  ).getDate();
+
+  return createLocalDate(
+    targetFirst.getFullYear(),
+    targetFirst.getMonth(),
+    Math.min(date.getDate(), targetLast),
+  );
+}
+
+export function isSameDay(left: Date, right: Date) {
+  return toIsoDate(left) === toIsoDate(right);
+}
+
+export function isSameMonth(left: Date, right: Date) {
+  return left.getFullYear() === right.getFullYear()
+    && left.getMonth() === right.getMonth();
+}
+
+export function getCalendarDays(
+  viewDate: Date,
+  weekStartsOn: ViWeekStartsOn,
+) {
+  const firstOfMonth = createLocalDate(viewDate.getFullYear(), viewDate.getMonth(), 1);
+  const firstWeekday = weekStartsOn === "monday" ? 1 : 0;
+  const leadingDays = (firstOfMonth.getDay() - firstWeekday + 7) % 7;
+  const firstCell = addDays(firstOfMonth, -leadingDays);
+
+  return Array.from({ length: 42 }, (_, index) => addDays(firstCell, index));
+}
+
+export function getWeekdayLabels(
+  locale: ViDatePickerLocale,
+  weekStartsOn: ViWeekStartsOn,
+) {
+  const sunday = createLocalDate(2021, 0, 3);
+  const offset = weekStartsOn === "monday" ? 1 : 0;
+  const narrowFormatter = new Intl.DateTimeFormat(locale, { weekday: "narrow" });
+  const longFormatter = new Intl.DateTimeFormat(locale, { weekday: "long" });
+
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(sunday, index + offset);
+    return {
+      long: longFormatter.format(date),
+      short: narrowFormatter.format(date),
+    };
+  });
+}
+
+export function formatSelectedDate(date: Date, locale: ViDatePickerLocale) {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+}
+
+export function formatMonthLabel(date: Date, locale: ViDatePickerLocale) {
+  const label = new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+  }).format(date);
+
+  return `${label.charAt(0).toLocaleUpperCase(locale)}${label.slice(1)}`;
+}
+
+export function formatLongDate(date: Date, locale: ViDatePickerLocale) {
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    weekday: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+export function getWeekEdge(
+  date: Date,
+  edge: "end" | "start",
+  weekStartsOn: ViWeekStartsOn,
+) {
+  const firstWeekday = weekStartsOn === "monday" ? 1 : 0;
+  const offset = (date.getDay() - firstWeekday + 7) % 7;
+  return addDays(date, edge === "start" ? -offset : 6 - offset);
+}
+
+export type ViDateRange = { start: string; end: string };
+
+export function normalizeViDateRange(range?: ViDateRange): ViDateRange {
+  const start = normalizeIsoDate(range?.start);
+  const end = normalizeIsoDate(range?.end);
+
+  if (!start) return { start: end, end: "" };
+  return end && end < start ? { start: end, end: start } : { start, end };
+}
+
+// vi-component-config.ts
+import type { CSSProperties } from "react";
+
+export const VI_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "pill"] as const;
+
+export type ViRadius = (typeof VI_RADIUS_OPTIONS)[number];
+
+export type ViVisualConfig = {
+  shinyBorder: boolean;
+  glass: boolean;
+  radius: ViRadius;
+  activeColor: string;
+  standbyColor: string;
+  activeTextColor: string;
+  standbyTextColor: string;
+  borderColor: string;
+  shineColorA: string;
+  shineColorB: string;
+};
+
+export type ViVisualProps = Partial<ViVisualConfig>;
+
+export const DEFAULT_VI_VISUAL_CONFIG: ViVisualConfig = {
+  shinyBorder: false,
+  glass: false,
+  radius: "md",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+};
+
+export const GLASS_VI_VISUAL_CONFIG = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+} as const;
+
+export const VI_RADIUS_VALUES: Record<ViRadius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+export type ViVisualStyle = CSSProperties & {
+  "--vi-active": string;
+  "--vi-standby": string;
+  "--vi-active-text": string;
+  "--vi-standby-text": string;
+  "--vi-border": string;
+  "--vi-shine-a": string;
+  "--vi-shine-b": string;
+  "--vi-radius": string;
+  "--color-bg": string;
+  "--color-surface": string;
+  "--color-surface-raised": string;
+  "--color-text": string;
+  "--color-text-muted": string;
+  "--color-quiet-ink": string;
+  "--color-line": string;
+  "--color-clear-lime": string;
+  "--color-accent": string;
+  "--color-accent-soft": string;
+};
+
+export function createViVisualConfig(
+  overrides: ViVisualProps = {},
+): ViVisualConfig {
+  const definedOverrides = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value !== undefined),
+  ) as ViVisualProps;
+
+  return { ...DEFAULT_VI_VISUAL_CONFIG, ...definedOverrides };
+}
+
+export function resolveViPalette(config: ViVisualConfig) {
+  return config.glass ? GLASS_VI_VISUAL_CONFIG : config;
+}
+
+export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
+  const palette = resolveViPalette(config);
+
+  return {
+    "--vi-active": palette.activeColor,
+    "--vi-standby": palette.standbyColor,
+    "--vi-active-text": palette.activeTextColor,
+    "--vi-standby-text": palette.standbyTextColor,
+    "--vi-border": palette.borderColor,
+    "--vi-shine-a": palette.shineColorA,
+    "--vi-shine-b": palette.shineColorB,
+    "--vi-radius": VI_RADIUS_VALUES[config.radius],
+    "--color-bg": palette.standbyColor,
+    "--color-surface": palette.standbyColor,
+    "--color-surface-raised": `color-mix(in srgb, ${palette.standbyColor} 88%, white)`,
+    "--color-text": palette.standbyTextColor,
+    "--color-text-muted": `color-mix(in srgb, ${palette.standbyTextColor} 68%, transparent)`,
+    "--color-quiet-ink": `color-mix(in srgb, ${palette.standbyTextColor} 46%, transparent)`,
+    "--color-line": palette.borderColor,
+    "--color-clear-lime": palette.activeColor,
+    "--color-accent": palette.activeColor,
+    "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
+  };
+}
+
+export function setViHoverOrigin({ currentTarget, clientX, clientY }: {
+  currentTarget: HTMLElement;
+  clientX: number;
+  clientY: number;
+}) {
+  const { left, top, width, height } = currentTarget.getBoundingClientRect();
+  const x = width ? Math.min(1, Math.max(0, (clientX - left) / width)) : 0.5;
+  const y = height ? Math.min(1, Math.max(0, (clientY - top) / height)) : 0.5;
+
+  currentTarget.style.setProperty("--vi-hover-x", (x * 100) + "%");
+  currentTarget.style.setProperty("--vi-hover-y", (y * 100) + "%");
+}
+
+// vi-component-surface.tsx
+"use client";
+
+import type {
+  CSSProperties,
+  ElementType,
+  PointerEvent,
+  PointerEventHandler,
+  ReactNode,
+} from "react";
+
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  type ViVisualConfig,
+  type ViVisualProps,
+} from "./vi-component-config";
+
+type ViSurfaceStyle = CSSProperties & {
+  "--vi-glow-x": string;
+  "--vi-glow-y": string;
+};
+
+type ViComponentSurfaceProps = {
+  as?: ElementType;
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
+  config?: ViVisualConfig;
+  visualProps?: ViVisualProps;
+  hoverGlow?: boolean;
+  hoverGlowStrength?: "soft" | "medium" | "strong";
+  onPointerDown?: PointerEventHandler<HTMLElement>;
+};
+
+export function ViComponentSurface({
+  as: Component = "div",
+  children,
+  className = "",
+  contentClassName = "",
+  config,
+  visualProps,
+  hoverGlow = false,
+  hoverGlowStrength = "medium",
+  onPointerDown,
+}: ViComponentSurfaceProps) {
+  const resolvedConfig = config ?? createViVisualConfig(visualProps);
+
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+
+    event.currentTarget.style.setProperty("--vi-glow-x", `${x.toFixed(2)}%`);
+    event.currentTarget.style.setProperty("--vi-glow-y", `${y.toFixed(2)}%`);
+  }
+
+  const style: ViSurfaceStyle = {
+    ...createViVisualStyle(resolvedConfig),
+    "--vi-glow-x": "50%",
+    "--vi-glow-y": "50%",
+  };
+
+  return (
+    <Component
+      className={`vi-component-surface ${className}`.trim()}
+      data-glass={resolvedConfig.glass}
+      data-hover-glow={hoverGlow}
+      data-hover-glow-strength={hoverGlowStrength}
+      data-shiny={resolvedConfig.shinyBorder}
+      onPointerDown={onPointerDown}
+      onPointerMove={hoverGlow ? handlePointerMove : undefined}
+      style={style}
+    >
+      <span className="vi-component-surface__shine" aria-hidden="true" />
+      <span className="vi-component-surface__hover-glow" aria-hidden="true" />
+      <div className={`vi-component-surface__content ${contentClassName}`.trim()}>
+        {children}
+      </div>
+    </Component>
+  );
+}
+
+// vi-date-picker.css
+.vi-component-surface {
+  --vi-font-body: ui-sans-serif, system-ui, sans-serif;
+  --vi-control-height-sm: 2rem;
+  --vi-control-height-md: 2.75rem;
+  --vi-control-height-lg: 3.25rem;
+  --vi-border-width: 1px;
+  --vi-focus-width: 2px;
+  --vi-radius-pill: 999px;
+  --vi-motion-duration-fast: 120ms;
+  --vi-motion-duration-standard: 220ms;
+  --vi-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --vi-surface-border-width: 1px;
+  --vi-surface-shine-duration: 2800ms;
+  --vi-surface-shine-ease: cubic-bezier(0.45, 0, 0.2, 1);
+  --vi-surface-glass-blur: 18px;
+  --vi-surface-glass-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.16);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.vi-component-surface {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: var(--vi-surface-border-width) solid var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+  color: var(--vi-standby-text);
+}
+
+@property --vi-hover-progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@media (hover: hover) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    background-image: radial-gradient(
+      circle farthest-corner at var(--vi-hover-x, 50%) var(--vi-hover-y, 50%),
+      var(--vi-hover-fill, color-mix(in srgb, var(--vi-active) 16%, transparent)) var(--vi-hover-progress, 100%),
+      transparent calc(var(--vi-hover-progress, 100%) + 14%)
+    );
+    animation: vi-hover-fill 340ms var(--vi-motion-ease-out, ease-out) both;
+  }
+}
+
+@keyframes vi-hover-fill {
+  from { --vi-hover-progress: -14%; }
+  to { --vi-hover-progress: 100%; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    animation: none;
+  }
+}
+
+.vi-component-surface.pong-game {
+  border-color: var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+}
+
+.vi-component-surface__shine,
+.vi-component-surface__hover-glow {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vi-component-surface__shine {
+  background: linear-gradient(
+    112deg,
+    transparent 12%,
+    transparent 33%,
+    var(--vi-shine-b) 44%,
+    var(--vi-shine-a) 50%,
+    var(--vi-shine-b) 56%,
+    transparent 67%,
+    transparent 88%
+  ) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+  opacity: 0.92;
+  animation: vi-component-shine var(--vi-surface-shine-duration) var(--vi-surface-shine-ease) infinite;
+}
+
+.vi-component-surface__hover-glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms var(--ease-out);
+}
+
+.vi-component-surface__hover-glow::before,
+.vi-component-surface__hover-glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vi-component-surface__hover-glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(
+      circle at var(--vi-glow-x) var(--vi-glow-y),
+      var(--vi-active) 0,
+      color-mix(in srgb, var(--vi-active) 72%, transparent) 7%,
+      color-mix(in srgb, var(--vi-active) 20%, transparent) 18%,
+      transparent 42%
+    ) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface__hover-glow::after {
+  z-index: 1;
+  background: radial-gradient(
+    circle at var(--vi-glow-x) var(--vi-glow-y),
+    color-mix(in srgb, var(--vi-active) 10%, transparent),
+    transparent 48%
+  );
+}
+
+.vi-component-surface[data-hover-glow="true"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.72;
+}
+
+.vi-component-surface[data-hover-glow-strength="soft"] .vi-component-surface__hover-glow {
+  opacity: 0;
+  filter: saturate(0.75);
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.42;
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 1;
+}
+
+.vi-component-surface[data-glass="true"] {
+  border-color: var(--vi-border);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    var(--vi-standby);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    var(--vi-surface-glass-shadow);
+  -webkit-backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+  backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+}
+
+.vi-component-surface__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@keyframes vi-component-shine {
+  0%,
+  18% {
+    background-position: 145% center;
+  }
+  72%,
+  100% {
+    background-position: -45% center;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vi-component-surface[data-glass="true"] {
+    background: #161b16;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+.vi-date-picker {
+  --vi-date-picker-height: var(--vi-control-height-md, 2.75rem);
+  --vi-date-picker-padding-inline: var(--vi-space-3, 0.75rem);
+  --vi-date-picker-gap: var(--vi-space-2, 0.5rem);
+  --vi-date-picker-font-size: var(--vi-ref-font-size-md, 0.82rem);
+  --vi-date-picker-label-size: var(--vi-ref-font-size-xs, 0.62rem);
+  --vi-date-picker-icon-size: var(--vi-ref-control-icon-md, 1rem);
+  --vi-date-picker-label-color: var(--vi-standby-text);
+  --vi-date-picker-text-color: var(--vi-standby-text);
+  --vi-date-picker-muted-color: color-mix(in srgb, var(--vi-standby-text) 50%, transparent);
+  --vi-date-picker-focus-color: var(--vi-active);
+  --vi-date-picker-range-fill: color-mix(in srgb, var(--vi-active) 22%, var(--vi-standby));
+  --vi-date-picker-selected-text: var(--vi-active-text);
+  --vi-date-picker-disabled-opacity: 0.42;
+  position: relative;
+  width: min(100%, 20rem);
+}
+
+.vi-date-picker[data-size="sm"] {
+  --vi-date-picker-height: var(--vi-control-height-sm, 2rem);
+  --vi-date-picker-padding-inline: var(--vi-space-2, 0.5rem);
+  --vi-date-picker-font-size: var(--vi-ref-font-size-sm, 0.72rem);
+  --vi-date-picker-icon-size: var(--vi-ref-control-icon-sm, 0.875rem);
+}
+
+.vi-date-picker[data-size="lg"] {
+  --vi-date-picker-height: var(--vi-control-height-lg, 3.25rem);
+  --vi-date-picker-padding-inline: var(--vi-space-4, 1rem);
+  --vi-date-picker-font-size: var(--vi-ref-font-size-lg, 1rem);
+  --vi-date-picker-icon-size: var(--vi-ref-control-icon-lg, 1.25rem);
+}
+
+.vi-date-picker__label {
+  display: block;
+  margin-bottom: var(--vi-date-picker-gap);
+  color: var(--vi-date-picker-label-color);
+  font-family: var(--vi-font-code, ui-monospace, monospace);
+  font-size: var(--vi-date-picker-label-size);
+  font-weight: 700;
+  letter-spacing: var(--vi-ref-letter-spacing-label, 0.07em);
+  line-height: var(--vi-ref-line-height-control, 1.2);
+  text-transform: uppercase;
+}
+
+.vi-date-picker__trigger-surface,
+.vi-date-picker__panel-surface {
+  width: 100%;
+  transition:
+    border-color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    box-shadow var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-date-picker:focus-within .vi-date-picker__trigger-surface {
+  border-color: var(--vi-date-picker-focus-color);
+  box-shadow: 0 0 0 var(--vi-focus-width, 2px) color-mix(in srgb, var(--vi-date-picker-focus-color) 16%, transparent);
+}
+
+.vi-date-picker__trigger {
+  display: grid;
+  width: 100%;
+  height: var(--vi-date-picker-height);
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--vi-date-picker-gap);
+  padding: 0 var(--vi-date-picker-padding-inline);
+  border: 0;
+  border-radius: max(0px, calc(var(--vi-radius) - var(--vi-surface-border-width, 1px)));
+  background: transparent;
+  color: var(--vi-date-picker-text-color);
+  font-family: var(--vi-font-code, ui-monospace, monospace);
+  font-size: var(--vi-date-picker-font-size);
+  text-align: left;
+}
+
+.vi-date-picker__trigger:focus-visible {
+  outline: 0;
+}
+
+.vi-date-picker__trigger [data-placeholder="true"] {
+  color: var(--vi-date-picker-muted-color);
+}
+
+.vi-date-picker__calendar-icon,
+.vi-date-picker__caret,
+.vi-date-picker__nav-button svg,
+.vi-date-picker__clear svg {
+  width: var(--vi-date-picker-icon-size);
+  height: var(--vi-date-picker-icon-size);
+  flex: 0 0 auto;
+}
+
+.vi-date-picker__calendar-icon,
+.vi-date-picker__caret {
+  color: var(--vi-date-picker-muted-color);
+}
+
+.vi-date-picker__caret {
+  transition:
+    color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    transform var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-date-picker__caret[data-open="true"] {
+  color: var(--vi-date-picker-focus-color);
+  transform: rotate(180deg);
+}
+
+.vi-date-picker__popover {
+  position: absolute;
+  z-index: var(--vi-layer-popover, 20);
+  top: calc(100% + var(--vi-date-picker-gap));
+  right: 0;
+  left: 0;
+  transform-origin: top;
+}
+
+.vi-date-picker__panel {
+  display: grid;
+  gap: var(--vi-space-3, 0.75rem);
+  padding: var(--vi-space-3, 0.75rem);
+  color: var(--vi-date-picker-text-color);
+}
+
+.vi-date-picker__month-nav {
+  display: grid;
+  grid-template-columns: var(--vi-control-height-sm, 2rem) 1fr var(--vi-control-height-sm, 2rem);
+  align-items: center;
+  gap: var(--vi-space-2, 0.5rem);
+}
+
+.vi-date-picker__month-nav strong {
+  overflow: hidden;
+  font-family: var(--vi-font-code, ui-monospace, monospace);
+  font-size: var(--vi-date-picker-font-size);
+  font-weight: 700;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vi-date-picker__nav-button {
+  display: grid;
+  width: var(--vi-control-height-sm, 2rem);
+  height: var(--vi-control-height-sm, 2rem);
+  place-items: center;
+  padding: 0;
+  border: var(--vi-border-width, 1px) solid var(--vi-border);
+  border-radius: max(0px, calc(var(--vi-radius) - var(--vi-space-1, 0.25rem)));
+  background: transparent;
+  color: var(--vi-date-picker-muted-color);
+  transition:
+    background-color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    border-color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-date-picker__nav-button:hover,
+.vi-date-picker__nav-button:focus-visible {
+  border-color: var(--vi-date-picker-focus-color);
+  color: var(--vi-date-picker-focus-color);
+  outline: 0;
+}
+
+.vi-date-picker__calendar {
+  display: grid;
+  gap: var(--vi-space-1, 0.25rem);
+}
+
+.vi-date-picker__weekdays,
+.vi-date-picker__week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--vi-space-1, 0.25rem);
+}
+
+.vi-date-picker__weekdays span {
+  display: grid;
+  min-width: 0;
+  min-height: 1.5rem;
+  place-items: center;
+  color: var(--vi-date-picker-muted-color);
+  font-family: var(--vi-font-code, ui-monospace, monospace);
+  font-size: var(--vi-date-picker-label-size);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.vi-date-picker__day,
+.vi-date-picker__empty-day {
+  aspect-ratio: 1;
+  min-width: 0;
+}
+
+.vi-date-picker__day {
+  isolation: isolate;
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--vi-date-picker-text-color);
+  font-family: var(--vi-font-code, ui-monospace, monospace);
+  font-size: var(--vi-date-picker-font-size);
+  transition:
+    background-color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    box-shadow var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-date-picker__day[data-outside="true"] {
+  color: var(--vi-date-picker-muted-color);
+}
+
+.vi-date-picker__day:focus-visible {
+  box-shadow: inset 0 0 0 var(--vi-border-width, 1px) color-mix(in srgb, var(--vi-date-picker-focus-color) 62%, transparent);
+  outline: 0;
+}
+
+.vi-date-picker__day[data-today="true"]::after {
+  position: absolute;
+  z-index: 1;
+  bottom: 0.25rem;
+  width: 0.2rem;
+  height: 0.2rem;
+  border-radius: 50%;
+  background: var(--vi-date-picker-focus-color);
+  content: "";
+}
+
+.vi-date-picker__day[data-selected="true"] {
+  --vi-hover-fill: color-mix(in srgb, var(--vi-active-text) 12%, transparent);
+  color: var(--vi-date-picker-selected-text);
+}
+
+.vi-date-picker__day[data-selected="true"] span {
+  position: absolute;
+  display: grid;
+  inset: 0;
+  place-items: center;
+  border-radius: inherit;
+  background-color: var(--vi-date-picker-focus-color);
+  background-image: inherit;
+}
+
+.vi-date-picker__day[data-selected="true"]:focus-visible span {
+  outline: 1px solid var(--vi-date-picker-selected-text);
+  outline-offset: -3px;
+}
+
+.vi-date-picker__day:is([data-range-middle="true"], [data-range-before="true"], [data-range-after="true"])::before {
+  position: absolute;
+  z-index: -1;
+  inset-block: 15%;
+  inset-inline: 50%;
+  background: var(--vi-date-picker-range-fill);
+  content: "";
+}
+
+.vi-date-picker__day[data-range-middle="true"]::before {
+  inset-inline: 0;
+  background-image: inherit;
+}
+
+.vi-date-picker__day[data-range-before="true"]::before {
+  inset-inline-start: calc(-0.5 * var(--vi-space-1, 0.25rem));
+}
+
+.vi-date-picker__day[data-range-after="true"]::before {
+  inset-inline-end: calc(-0.5 * var(--vi-space-1, 0.25rem));
+}
+
+.vi-date-picker__day[data-selected="true"]::after {
+  background: currentColor;
+}
+
+.vi-date-picker__clear {
+  border-radius: var(--vi-radius);
+  display: inline-flex;
+  min-height: var(--vi-control-height-sm, 2rem);
+  align-items: center;
+  justify-self: end;
+  gap: var(--vi-space-2, 0.5rem);
+  padding: 0 var(--vi-space-2, 0.5rem);
+  border: 0;
+  background: transparent;
+  color: var(--vi-date-picker-muted-color);
+  font-family: var(--vi-font-code, ui-monospace, monospace);
+  font-size: var(--vi-date-picker-label-size);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.vi-date-picker__clear:hover,
+.vi-date-picker__clear:focus-visible {
+  color: var(--vi-date-picker-focus-color);
+  outline: 0;
+}
+
+.vi-date-picker[data-disabled="true"] {
+  opacity: var(--vi-date-picker-disabled-opacity);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-date-picker__caret,
+  .vi-date-picker__day,
+  .vi-date-picker__nav-button {
+    transition-duration: 0.01ms;
+  }
+}

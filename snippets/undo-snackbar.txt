@@ -1,0 +1,1591 @@
+// Example.tsx
+import { UndoSnackbarDemo } from "./src/components/vicomponents/demos/undo-snackbar";
+import "./src/components/vicomponents/tokens.css";
+import "./src/components/vicomponents/demos/demos.css";
+
+export default function Example() {
+  return <UndoSnackbarDemo />;
+}
+
+// Dependencies: react
+
+// --- src/components/vicomponents/components/undo-snackbar/vi-undo-snackbar.tsx ---
+"use client";
+
+import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
+
+import type { ViMotionProps } from "../../core/motion-props";
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  type ViVisualProps,
+} from "../../core/visual-props";
+import {
+  ViAsyncTransient,
+  announceableText,
+  useControllableAsyncBoolean,
+  useViReducedMotion,
+  type ViAsyncPlacement,
+} from "../shared/b06-async-utils";
+import "../shared/b06-async.css";
+
+export type ViUndoSnackbarPlacement = ViAsyncPlacement;
+
+export type ViUndoSnackbarProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> &
+  ViVisualProps &
+  ViMotionProps & {
+    actionLabel?: string;
+    defaultOpen?: boolean;
+    durationMs?: number;
+    message: ReactNode;
+    onOpenChange?: (open: boolean) => void;
+    onUndo?: () => void;
+    open?: boolean;
+    placement?: ViUndoSnackbarPlacement;
+  };
+
+export const ViUndoSnackbar = forwardRef<HTMLDivElement, ViUndoSnackbarProps>(
+  function ViUndoSnackbar(
+    {
+      actionLabel = "Undo",
+      activeColor,
+      activeTextColor,
+      borderColor,
+      className = "",
+      defaultOpen = false,
+      durationMs = 6000,
+      glass,
+      message,
+      motion = "auto",
+      motionConfig,
+      onOpenChange,
+      onUndo,
+      open: openProp,
+      paused,
+      placement = "bottom",
+      radius = "md",
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      standbyColor,
+      standbyTextColor,
+      style,
+      ...rest
+    },
+    ref,
+  ) {
+    const [open, setOpen, controlled] = useControllableAsyncBoolean(openProp, defaultOpen);
+    const reducedMotion = useViReducedMotion(motion);
+    const visual = createViVisualConfig({
+      activeColor,
+      activeTextColor,
+      borderColor,
+      glass,
+      radius,
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      standbyColor,
+      standbyTextColor,
+    });
+    void motionConfig;
+
+    function requestClose() {
+      if (!controlled) setOpen(false);
+      onOpenChange?.(false);
+    }
+
+    return (
+      <ViAsyncTransient
+        {...rest}
+        ref={ref}
+        actionLabel={actionLabel}
+        active={open}
+        announcement={announceableText(message, "Undo notification")}
+        className={`vi-b06-undo ${className}`.trim()}
+        durationMs={durationMs}
+        kind="undo"
+        motionReduced={reducedMotion}
+        onAction={onUndo}
+        onRequestClose={requestClose}
+        paused={paused}
+        placement={placement}
+        style={{ ...createViVisualStyle(visual), ...style }}
+      >
+        {message}
+      </ViAsyncTransient>
+    );
+  },
+);
+
+
+// --- src/components/vicomponents/components/shared/b06-async-utils.tsx ---
+"use client";
+
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FocusEvent,
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
+
+import { clamp } from "./action-feedback-utils";
+export { useViReducedMotion } from "./action-feedback-utils";
+
+export type ViAsyncPlacement =
+  | "top-start"
+  | "top"
+  | "top-end"
+  | "bottom-start"
+  | "bottom"
+  | "bottom-end";
+
+export type ViAsyncStatus = "idle" | "pending" | "success" | "error" | "warning" | "info";
+
+export type ViTransientHandlers = {
+  onBlur: (event: FocusEvent<HTMLElement>) => void;
+  onFocus: () => void;
+  onPointerEnter: () => void;
+  onPointerLeave: () => void;
+};
+
+export function useControllableAsyncBoolean(
+  controlled: boolean | undefined,
+  defaultValue: boolean,
+) {
+  const [uncontrolled, setUncontrolled] = useState(defaultValue);
+  const isControlled = controlled !== undefined;
+  return [isControlled ? controlled : uncontrolled, setUncontrolled, isControlled] as const;
+}
+
+function useDocumentHidden() {
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const update = () => setHidden(document.hidden);
+    update();
+    document.addEventListener("visibilitychange", update);
+    return () => document.removeEventListener("visibilitychange", update);
+  }, []);
+
+  return hidden;
+}
+
+/**
+ * Schedules one finite timeout while preserving its remaining duration when
+ * hover, focus, document visibility or an explicit paused prop interrupts it.
+ */
+export function useViTransientTimer({
+  active,
+  delayMs,
+  onExpire,
+  paused = false,
+}: {
+  active: boolean;
+  delayMs: number;
+  onExpire: () => void;
+  paused?: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const documentHidden = useDocumentHidden();
+  const delay = Math.max(0, Number.isFinite(delayMs) ? delayMs : 0);
+  const remainingRef = useRef(delay);
+  const timeoutRef = useRef<number | null>(null);
+  const startedAtRef = useRef<number | null>(null);
+  const activeRef = useRef(false);
+  const onExpireRef = useRef(onExpire);
+
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
+
+  const clearTimer = useCallback(() => {
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (startedAtRef.current !== null) {
+      remainingRef.current = Math.max(
+        0,
+        remainingRef.current - (Date.now() - startedAtRef.current),
+      );
+      startedAtRef.current = null;
+    }
+  }, []);
+
+  const isPaused = paused || hovered || focused || documentHidden;
+
+  useEffect(() => {
+    clearTimer();
+
+    if (!active) {
+      activeRef.current = false;
+      remainingRef.current = delay;
+      return;
+    }
+
+    if (!activeRef.current) {
+      remainingRef.current = delay;
+      activeRef.current = true;
+    }
+
+    if (isPaused || delay <= 0) return;
+
+    const wait = Math.max(1, remainingRef.current);
+    startedAtRef.current = Date.now();
+    timeoutRef.current = window.setTimeout(() => {
+      timeoutRef.current = null;
+      startedAtRef.current = null;
+      remainingRef.current = delay;
+      onExpireRef.current();
+    }, wait);
+
+    return clearTimer;
+  }, [active, clearTimer, delay, isPaused]);
+
+  useEffect(() => () => clearTimer(), [clearTimer]);
+
+  const onBlur = useCallback((event: FocusEvent<HTMLElement>) => {
+    const next = event.relatedTarget;
+    if (!next || !event.currentTarget.contains(next as Node)) setFocused(false);
+  }, []);
+
+  return {
+    handlers: {
+      onBlur,
+      onFocus: () => setFocused(true),
+      onPointerEnter: () => setHovered(true),
+      onPointerLeave: () => setHovered(false),
+    } satisfies ViTransientHandlers,
+    paused: isPaused,
+  };
+}
+
+export function useViRestoreFocus(active: boolean, rootRef: { current: HTMLElement | null }) {
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const wasActiveRef = useRef(false);
+
+  const restore = useCallback(() => {
+    const target = previousFocusRef.current;
+    const root = rootRef.current;
+    if (target && root?.contains(document.activeElement)) {
+      target.focus({ preventScroll: true });
+    }
+    previousFocusRef.current = null;
+  }, [rootRef]);
+
+  useEffect(() => {
+    if (active && !wasActiveRef.current) {
+      const candidate = document.activeElement;
+      if (candidate instanceof HTMLElement && !rootRef.current?.contains(candidate)) {
+        previousFocusRef.current = candidate;
+      }
+    } else if (!active && wasActiveRef.current) {
+      restore();
+    }
+    wasActiveRef.current = active;
+  }, [active, restore, rootRef]);
+
+  useEffect(() => () => restore(), [restore]);
+}
+
+export function ViAsyncLiveRegion({
+  active,
+  announcement,
+  assertive = false,
+  id,
+}: {
+  active: boolean;
+  announcement: string;
+  assertive?: boolean;
+  id: string;
+}) {
+  const key = `${id}-${active ? announcement : ""}`;
+  return (
+    <span
+      key={key}
+      id={id}
+      className="vi-b06-live"
+      aria-atomic="true"
+      aria-live={assertive ? "assertive" : "polite"}
+    >
+      {active ? announcement : ""}
+    </span>
+  );
+}
+
+export function announceableText(value: ReactNode, fallback: string) {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  return fallback;
+}
+
+export function normalizeAsyncStatus(status: string): ViAsyncStatus {
+  if (
+    status === "idle" ||
+    status === "pending" ||
+    status === "success" ||
+    status === "error" ||
+    status === "warning" ||
+    status === "info"
+  ) return status;
+  return "info";
+}
+
+export function visibleToastCount(value: number | undefined, length: number) {
+  const max = Math.floor(Number.isFinite(value) ? Number(value) : 3);
+  return Math.min(length, Math.max(1, max));
+}
+
+export function clampAsyncRows(value: number | undefined, fallback: number) {
+  return clamp(Math.round(Number.isFinite(value) ? Number(value) : fallback), 1, 12);
+}
+
+export type ViAsyncTransientKind = "toast" | "notification" | "undo";
+
+export type ViAsyncTransientProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
+  actionLabel?: string;
+  active: boolean;
+  announcement: string;
+  children: ReactNode;
+  kind: ViAsyncTransientKind;
+  onAction?: () => void;
+  onRequestClose: (reason: "action" | "escape" | "timeout" | "dismiss") => void;
+  paused?: boolean;
+  placement: ViAsyncPlacement;
+  durationMs: number;
+  motionReduced: boolean;
+  style?: CSSProperties;
+};
+
+export const ViAsyncTransient = forwardRef<HTMLDivElement, ViAsyncTransientProps>(
+  function ViAsyncTransient(
+    {
+      actionLabel,
+      active,
+      announcement,
+      children,
+      className = "",
+      durationMs,
+      id,
+      kind,
+      motionReduced,
+      onAction,
+      onBlur: onNativeBlur,
+      onFocus: onNativeFocus,
+      onKeyDown: onNativeKeyDown,
+      onPointerEnter: onNativePointerEnter,
+      onPointerLeave: onNativePointerLeave,
+      onRequestClose,
+      paused = false,
+      placement,
+      role: nativeRole,
+      style,
+      ...rest
+    },
+    forwardedRef,
+  ) {
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    const generatedId = useId().replaceAll(":", "");
+    const liveId = id ? `${id}-live` : `vi-b06-live-${generatedId}`;
+    const { handlers } = useViTransientTimer({
+      active,
+      delayMs: durationMs,
+      onExpire: () => onRequestClose("timeout"),
+      paused,
+    });
+    useViRestoreFocus(active, rootRef);
+
+    function setRootRef(node: HTMLDivElement | null) {
+      rootRef.current = node;
+      if (typeof forwardedRef === "function") forwardedRef(node);
+      else if (forwardedRef) forwardedRef.current = node;
+    }
+
+    function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+      onNativeKeyDown?.(event);
+      if (event.defaultPrevented || event.key !== "Escape" || !active) return;
+      event.preventDefault();
+      onRequestClose("escape");
+    }
+
+    function handleAction() {
+      onAction?.();
+      onRequestClose("action");
+    }
+
+    return (
+      <div
+        {...rest}
+        ref={setRootRef}
+        id={id}
+        className={`vi-b06-control vi-b06-transient-host ${className.trim()}`.trim()}
+        data-motion={motionReduced ? "reduced" : "auto"}
+        data-open={active}
+        onBlur={(event) => {
+          handlers.onBlur(event);
+          onNativeBlur?.(event);
+        }}
+        onFocus={(event) => {
+          handlers.onFocus();
+          onNativeFocus?.(event);
+        }}
+        onKeyDown={handleKeyDown}
+        onPointerEnter={(event) => {
+          handlers.onPointerEnter();
+          onNativePointerEnter?.(event);
+        }}
+        onPointerLeave={(event) => {
+          handlers.onPointerLeave();
+          onNativePointerLeave?.(event);
+        }}
+        role={nativeRole ?? "status"}
+        aria-hidden={!active}
+        style={style}
+      >
+        <div
+          className={`vi-b06-transient vi-b06-transient--${kind}`}
+          data-placement={placement}
+          aria-hidden={!active}
+        >
+          <span className="vi-b06-transient__message">{children}</span>
+          {actionLabel ? (
+            <button
+              type="button"
+              className="vi-b06-transient__action vi-b06-focus"
+              tabIndex={active ? 0 : -1}
+              onClick={handleAction}
+              disabled={!active}
+            >
+              {actionLabel}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="vi-b06-transient__dismiss vi-b06-focus"
+            aria-label="Dismiss notification"
+            tabIndex={active ? 0 : -1}
+            onClick={() => onRequestClose("dismiss")}
+            disabled={!active}
+          >
+            ×
+          </button>
+        </div>
+        <ViAsyncLiveRegion active={active} announcement={announcement} id={liveId} />
+      </div>
+    );
+  },
+);
+
+
+// --- src/components/vicomponents/components/shared/b06-async.css ---
+.vi-b06-control {
+  --vi-b06-surface: var(--vi-standby, var(--vi-color-surface));
+  --vi-b06-text: var(--vi-standby-text, var(--vi-color-text-primary));
+  --vi-b06-accent: var(--vi-active, var(--vi-color-action));
+  --vi-b06-border: var(--vi-border, var(--vi-color-border));
+  color: var(--vi-b06-text);
+  font-family: var(--vi-font-body);
+}
+
+.vi-b06-focus:focus-visible {
+  outline: var(--vi-focus-width, 2px) solid var(--vi-focus-ring-color, var(--vi-b06-accent));
+  outline-offset: var(--vi-focus-offset, 3px);
+}
+
+.vi-b06-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.vi-b06-transient-host {
+  position: relative;
+  display: grid;
+  min-width: min(100%, 20rem);
+  min-height: 4.5rem;
+  place-items: center;
+}
+
+.vi-b06-transient {
+  position: absolute;
+  z-index: var(--vi-layer-overlay, 8);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--vi-space-3, 0.75rem);
+  align-items: center;
+  width: min(100%, 26rem);
+  padding: var(--vi-space-3, 0.75rem) var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius, 16px);
+  background: color-mix(in srgb, var(--vi-b06-surface) 94%, black);
+  box-shadow: var(--vi-depth-overlay, 0 1rem 3rem rgb(0 0 0 / 32%));
+  opacity: 0;
+  pointer-events: none;
+  transform: translate3d(0, var(--vi-b06-offset, 8px), 0) scale(var(--vi-b06-scale, 0.98));
+  transition:
+    opacity var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-standard, ease-out),
+    transform var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-emphasized, ease-out);
+  will-change: opacity, transform;
+}
+
+.vi-b06-transient-host[data-open="true"] .vi-b06-transient {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.vi-b06-transient-host[data-open="true"] .vi-b06-transient__dismiss {
+  pointer-events: auto;
+}
+
+.vi-b06-transient[data-placement="top-start"] { top: 0; left: 0; }
+.vi-b06-transient[data-placement="top"] { top: 0; left: 50%; transform: translate3d(-50%, var(--vi-b06-offset, 8px), 0) scale(var(--vi-b06-scale, 0.98)); }
+.vi-b06-transient[data-placement="top-end"] { top: 0; right: 0; }
+.vi-b06-transient[data-placement="bottom-start"] { bottom: 0; left: 0; }
+.vi-b06-transient[data-placement="bottom"] { bottom: 0; left: 50%; transform: translate3d(-50%, var(--vi-b06-offset, 8px), 0) scale(var(--vi-b06-scale, 0.98)); }
+.vi-b06-transient[data-placement="bottom-end"] { right: 0; bottom: 0; }
+.vi-b06-transient-host[data-open="true"] .vi-b06-transient[data-placement="top"],
+.vi-b06-transient-host[data-open="true"] .vi-b06-transient[data-placement="bottom"] {
+  transform: translate3d(-50%, 0, 0) scale(1);
+}
+
+.vi-b06-transient--toast {
+  --vi-b06-scale: 0.94;
+  border-color: color-mix(in srgb, var(--vi-b06-accent) 55%, var(--vi-b06-border));
+}
+
+.vi-b06-transient--notification {
+  --vi-b06-offset: -10px;
+  border-color: color-mix(in srgb, var(--vi-b06-accent) 45%, var(--vi-b06-border));
+}
+
+.vi-b06-transient--undo {
+  --vi-b06-offset: 10px;
+  border-color: color-mix(in srgb, var(--vi-b06-accent) 45%, var(--vi-b06-border));
+}
+
+.vi-b06-transient__message {
+  min-width: 0;
+  color: var(--vi-b06-text);
+  line-height: var(--vi-ref-line-height-body, 1.5);
+}
+
+.vi-b06-transient__dismiss,
+.vi-b06-transient__action,
+.vi-b06-submit__button,
+.vi-b06-submit__reset {
+  min-height: var(--vi-control-height-sm, 2rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius-pill, 999px);
+  background: transparent;
+  color: var(--vi-b06-text);
+  cursor: pointer;
+  font: inherit;
+  padding: 0 var(--vi-space-3, 0.75rem);
+}
+
+.vi-b06-transient__dismiss {
+  display: inline-grid;
+  width: 2rem;
+  min-width: 2rem;
+  padding: 0;
+  place-items: center;
+}
+
+.vi-b06-transient__dismiss:hover,
+.vi-b06-transient__action:hover,
+.vi-b06-submit__reset:hover {
+  border-color: var(--vi-b06-accent);
+  color: var(--vi-b06-accent);
+}
+
+.vi-b06-transient__action {
+  border-color: var(--vi-b06-accent);
+  background: var(--vi-b06-accent);
+  color: var(--vi-active-text, var(--vi-color-action-text));
+}
+
+.vi-b06-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vi-space-2, 0.5rem);
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius-pill, 999px);
+  background: color-mix(in srgb, var(--vi-b06-surface) 92%, black);
+}
+
+.vi-b06-status[data-status="success"] { --vi-b06-accent: var(--vi-color-action); }
+.vi-b06-status[data-status="error"] { --vi-b06-accent: var(--vi-color-danger); }
+.vi-b06-status[data-status="pending"] { --vi-b06-accent: var(--vi-color-text-secondary); }
+.vi-b06-status__icon { display: inline-grid; min-width: 1rem; place-items: center; color: var(--vi-b06-accent); }
+.vi-b06-status__label { color: var(--vi-b06-text); }
+
+.vi-b06-composer {
+  display: grid;
+  gap: var(--vi-space-3, 0.75rem);
+  width: min(100%, 34rem);
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius, 16px);
+  background: color-mix(in srgb, var(--vi-b06-surface) 92%, black);
+}
+
+.vi-b06-composer__textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: calc(var(--vi-ref-line-height-body, 1.5) * 1em * var(--vi-composer-min-rows, 2));
+  max-height: calc(var(--vi-ref-line-height-body, 1.5) * 1em * var(--vi-composer-max-rows, 8));
+  padding: var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius-sm, 8px);
+  background: transparent;
+  color: var(--vi-b06-text);
+  font: inherit;
+  line-height: var(--vi-ref-line-height-body, 1.5);
+}
+
+.vi-b06-composer__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--vi-space-3, 0.75rem);
+}
+
+.vi-b06-composer__count,
+.vi-b06-composer__status {
+  color: var(--vi-color-text-secondary);
+  font-size: var(--vi-ref-font-size-sm, 0.72rem);
+}
+
+.vi-b06-composer__submit,
+.vi-b06-submit__button {
+  min-height: var(--vi-control-height-md, 2.75rem);
+  border-color: var(--vi-b06-accent);
+  background: var(--vi-b06-accent);
+  color: var(--vi-active-text, var(--vi-color-action-text));
+}
+
+.vi-b06-composer__submit:disabled,
+.vi-b06-submit__button:disabled,
+.vi-b06-submit__reset:disabled,
+.vi-b06-transient button:disabled {
+  cursor: not-allowed;
+  opacity: 0.56;
+}
+
+.vi-b06-stack {
+  position: relative;
+  display: grid;
+  gap: var(--vi-space-2, 0.5rem);
+  width: min(100%, 30rem);
+  min-height: 4rem;
+  padding: var(--vi-space-2, 0.5rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius, 16px);
+  background: color-mix(in srgb, var(--vi-b06-surface) 94%, black);
+}
+
+.vi-b06-stack[data-placement^="top"] { align-content: start; }
+.vi-b06-stack[data-placement^="bottom"] { align-content: end; }
+.vi-b06-stack__item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--vi-space-3, 0.75rem);
+  align-items: center;
+  padding: var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius-sm, 8px);
+  background: color-mix(in srgb, var(--vi-b06-surface) 97%, black);
+  color: var(--vi-b06-text);
+  transition: opacity var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-standard, ease-out), transform var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-standard, ease-out);
+}
+
+.vi-b06-stack__item[data-open="false"] { opacity: 0; transform: translateY(-4px); }
+.vi-b06-stack__item[data-kind="success"] { border-color: color-mix(in srgb, var(--vi-color-action) 50%, var(--vi-b06-border)); }
+.vi-b06-stack__item[data-kind="error"] { border-color: color-mix(in srgb, var(--vi-color-danger) 55%, var(--vi-b06-border)); }
+.vi-b06-stack__message { min-width: 0; }
+.vi-b06-stack__close { justify-self: end; }
+
+.vi-b06-submit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vi-space-3, 0.75rem);
+  align-items: center;
+  width: fit-content;
+  padding: var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-b06-border);
+  border-radius: var(--vi-radius, 16px);
+  background: color-mix(in srgb, var(--vi-b06-surface) 92%, black);
+}
+
+.vi-b06-submit__status {
+  flex: 1 1 100%;
+  color: var(--vi-b06-text);
+  font-size: var(--vi-ref-font-size-sm, 0.72rem);
+}
+
+.vi-b06-submit[data-status="success"] { --vi-b06-accent: var(--vi-color-action); }
+.vi-b06-submit[data-status="error"] { --vi-b06-accent: var(--vi-color-danger); }
+.vi-b06-submit[data-status="pending"] { --vi-b06-accent: var(--vi-color-text-secondary); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-b06-control,
+  .vi-b06-control *,
+  .vi-b06-control *::before,
+  .vi-b06-control *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+.vi-b06-control[data-motion="reduced"],
+.vi-b06-control[data-motion="reduced"] *,
+.vi-b06-control[data-motion="reduced"] *::before,
+.vi-b06-control[data-motion="reduced"] *::after {
+  transition-duration: 0.001ms !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+}
+
+
+// --- src/components/vicomponents/demos/undo-snackbar.tsx ---
+"use client";
+
+import type { ViVisualProps } from "../core/visual-props";
+
+import { useState } from "react";
+
+import { ViUndoSnackbar } from "../components/undo-snackbar";
+
+export function UndoSnackbarDemo({ visual }: { visual?: ViVisualProps }) {
+  const [open, setOpen] = useState(true);
+  const [status, setStatus] = useState("Item archived");
+  return (
+    <div className="vi-b06-demo">
+      <button type="button" className="vi-b06-demo__trigger" onClick={() => setOpen(true)}>Archive item</button>
+      <ViUndoSnackbar {...visual}
+        open={open}
+        message={status}
+        durationMs={0}
+        onUndo={() => setStatus("Archive undone")}
+        onOpenChange={setOpen}
+        aria-label="Archive feedback"
+      />
+    </div>
+  );
+}
+
+
+// --- src/components/vicomponents/demos/demos.css ---
+.vi-route-demo {
+  position: relative;
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
+  padding: 2rem;
+}
+
+.vi-route-demo__surface {
+  width: fit-content;
+  padding: 0.3rem;
+}
+
+.vi-route-demo__surface--wide {
+  width: min(100%, 30rem);
+}
+
+.vi-route-demo__content {
+  padding: 1rem;
+}
+
+.vi-route-demo__tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.vi-route-demo__tabs button,
+.vi-route-demo__dialog button {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--vi-radius);
+  background: transparent;
+  color: var(--vi-standby-text);
+}
+
+.vi-route-demo__tabs button[aria-selected="true"] {
+  border-color: var(--vi-active);
+  background: var(--vi-active);
+  color: var(--vi-active-text);
+}
+
+.vi-route-demo__content small,
+.vi-route-demo__content > span {
+  display: block;
+  color: var(--vi-active);
+  font-family: var(--vi-font-code);
+  font-size: var(--vi-ref-font-size-xs);
+  letter-spacing: var(--vi-ref-letter-spacing-label);
+  text-transform: uppercase;
+}
+
+.vi-route-demo__content strong {
+  display: block;
+  margin-top: 2rem;
+  color: var(--vi-standby-text);
+  font-size: 1.25rem;
+}
+
+.vi-route-demo__content p {
+  margin: 0.75rem 0 0;
+  color: var(--vi-color-text-secondary);
+}
+
+.vi-route-demo__dialog {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 1rem;
+  width: min(100% - 2rem, 22rem);
+  padding: 1.3rem;
+  border: 1px solid var(--vi-color-action);
+  background: var(--vi-color-surface-raised);
+  box-shadow: var(--vi-depth-overlay);
+}
+
+.vi-route-demo__dialog button {
+  width: fit-content;
+  border-color: var(--vi-color-border);
+}
+
+.vi-route-demo__empty {
+  margin: 0;
+  color: var(--vi-color-text-secondary);
+}
+
+.vi-b06-demo {
+  display: grid;
+  gap: var(--vi-space-3, 0.75rem);
+  width: min(100%, 34rem);
+  justify-items: center;
+}
+
+.vi-b06-demo__trigger {
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: 1px solid var(--vi-color-border);
+  border-radius: var(--vi-radius-pill, 999px);
+  background: transparent;
+  color: var(--vi-color-text-primary);
+  font: inherit;
+}
+
+.vi-b06-demo__status {
+  color: var(--vi-color-action);
+}
+
+.vi-b07-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+}
+
+.vi-b07-demo--center {
+  min-height: 9rem;
+  place-items: center;
+}
+
+.vi-b07-demo button {
+  width: fit-content;
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius-pill, 999px);
+  background: var(--vi-active, var(--vi-color-action));
+  color: var(--vi-active-text, var(--vi-color-action-text));
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The progress stepper owns its full-width, text-first button treatment;
+   keep the shared demo action skin from turning its text into a lime pill. */
+.vi-b07-demo .vi-b07-steps__button {
+  width: 100%;
+  min-height: 0;
+  padding: var(--vi-space-2, 0.5rem);
+  border: 0;
+  border-radius: var(--vi-radius-sm, 8px);
+  background: transparent;
+  color: var(--vi-b07-text);
+}
+
+.vi-b07-demo__content {
+  min-height: 4rem;
+  display: grid;
+  place-items: center start;
+  color: var(--vi-color-text-secondary);
+}
+
+.vi-b08-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 5rem;
+  place-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  text-align: center;
+}
+
+.vi-b08-demo button {
+  width: fit-content;
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius-pill, 999px);
+  background: var(--vi-active, var(--vi-color-action));
+  color: var(--vi-active-text, var(--vi-color-action-text));
+  font: inherit;
+  cursor: pointer;
+}
+
+.vi-b08-demo__error {
+  display: inline-block;
+  padding: var(--vi-space-2, 0.5rem) var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-color-danger);
+  border-radius: var(--vi-radius-sm, 8px);
+  color: var(--vi-color-danger);
+}
+
+.vi-b09-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 5rem;
+  align-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b09-demo--center { min-height: 9rem; place-items: center; }
+.vi-b09-demo > .vi-b09-marquee { width: 100%; }
+.vi-b09-demo .vi-b09-float,
+.vi-b09-demo .vi-b09-blob,
+.vi-b09-demo .vi-b09-neon,
+.vi-b09-demo .vi-b09-border-morph { padding: var(--vi-space-4, 1rem); }
+
+.vi-b10-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 7rem;
+  place-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b10-demo--center { min-height: 10rem; }
+.vi-b10-demo button {
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: 1px solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius-pill, 999px);
+  background: var(--vi-active, var(--vi-color-action));
+  color: var(--vi-active-text, var(--vi-color-action-text));
+  font: inherit;
+}
+
+.vi-b11-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 9rem;
+  align-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b11-demo--center { place-items: center; }
+.vi-b11-demo > .vi-b11-pages,
+.vi-b11-demo > .vi-b11-flip,
+.vi-b11-demo > .vi-b11-cube,
+.vi-b11-demo > .vi-b11-fold,
+.vi-b11-demo > .vi-b11-depth { width: min(100%, 30rem); }
+
+.vi-b12-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 9rem;
+  align-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b13-demo {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  justify-items: center;
+  padding: var(--vi-space-4, 1rem) 0;
+}
+
+.vi-b13-demo > * {
+  max-width: 100%;
+}
+
+.vi-b12-demo > * { width: min(100%, 36rem); }
+.vi-b12-demo > .vi-b12-phase-lock,
+.vi-b12-demo > .vi-b12-braille { justify-self: center; }
+
+.vi-b14-demo {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 8rem;
+  align-items: center;
+  justify-items: center;
+  padding: var(--vi-space-4, 1rem) 0;
+}
+
+.vi-b14-demo > * {
+  width: min(100%, 36rem);
+  max-width: 100%;
+}
+
+.vi-b14-demo--text {
+  min-height: 5rem;
+  justify-items: start;
+}
+
+.vi-like-burst-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vi-space-3, 0.75rem);
+}
+
+.vi-compare-art { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent 0 15px, currentColor 16px 17px); color: color-mix(in srgb, var(--vi-active) 20%, transparent); }
+.vi-compare-art--after { color: color-mix(in srgb, var(--vi-active) 65%, transparent); }
+
+.vi-hold-confirm-demo {
+  display: grid;
+  justify-items: center;
+  gap: var(--vi-space-2, 0.5rem);
+}
+
+
+// --- src/components/vicomponents/tokens.css ---
+:root {
+  color-scheme: dark;
+
+  /* Reference palette. Raw values live only in this layer. */
+  --vi-ref-color-ink-1000: #010600;
+  --vi-ref-color-ink-950: #071007;
+  --vi-ref-color-ink-900: #0d170d;
+  --vi-ref-color-ink-800: #162216;
+  --vi-ref-color-moss-700: #233a24;
+  --vi-ref-color-moss-500: #637262;
+  --vi-ref-color-moss-300: #9aaa98;
+  --vi-ref-color-lime-400: #c3f36b;
+  --vi-ref-color-rose-400: #ff8095;
+  --vi-ref-color-paper-100: #f3f8f0;
+  --vi-ref-color-white: #ffffff;
+  --vi-ref-color-black: #000000;
+
+  /* Reference typography. Font files are supplied by next/font in RootLayout. */
+  --vi-ref-font-family-heading: var(--font-space-grotesk), "Space Grotesk", Arial, sans-serif;
+  --vi-ref-font-family-body: var(--font-dm-sans), "DM Sans", Arial, Helvetica, sans-serif;
+  --vi-ref-font-family-display: var(--font-dm-serif-display), "DM Serif Display", Georgia, "Times New Roman", serif;
+  --vi-ref-font-family-code: var(--font-jetbrains-mono), "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --vi-ref-font-size-2xs: 0.54rem;
+  --vi-ref-font-size-xs: 0.62rem;
+  --vi-ref-font-size-sm: 0.72rem;
+  --vi-ref-font-size-md: 0.82rem;
+  --vi-ref-font-size-lg: 1rem;
+  --vi-ref-font-size-xl: 1.25rem;
+  --vi-ref-line-height-tight: 1.05;
+  --vi-ref-line-height-control: 1.2;
+  --vi-ref-line-height-body: 1.5;
+  --vi-ref-letter-spacing-label: 0.07em;
+  --vi-ref-letter-spacing-heading: -0.04em;
+
+  /* Reference dimensions. */
+  --vi-ref-space-0: 0;
+  --vi-ref-space-1: 0.25rem;
+  --vi-ref-space-2: 0.5rem;
+  --vi-ref-space-3: 0.75rem;
+  --vi-ref-space-4: 1rem;
+  --vi-ref-space-5: 1.25rem;
+  --vi-ref-space-6: 1.5rem;
+  --vi-ref-space-8: 2rem;
+  --vi-ref-space-10: 2.5rem;
+  --vi-ref-space-12: 3rem;
+  --vi-ref-control-height-sm: 2rem;
+  --vi-ref-control-height-md: 2.75rem;
+  --vi-ref-control-height-lg: 3.25rem;
+  --vi-ref-control-icon-sm: 0.875rem;
+  --vi-ref-control-icon-md: 1rem;
+  --vi-ref-control-icon-lg: 1.25rem;
+  --vi-ref-border-width-thin: 1px;
+  --vi-ref-border-width-focus: 2px;
+  --vi-ref-radius-none: 0px;
+  --vi-ref-radius-sm: 8px;
+  --vi-ref-radius-md: 16px;
+  --vi-ref-radius-lg: 28px;
+  --vi-ref-radius-pill: 999px;
+
+  /* Reference material, motion and layering. */
+  --vi-ref-blur-glass: 18px;
+  --vi-ref-shadow-raised: 0 1rem 2.5rem rgb(0 0 0 / 16%);
+  --vi-ref-shadow-overlay: 0 1rem 3rem rgb(0 0 0 / 32%);
+  --vi-ref-duration-instant: 80ms;
+  --vi-ref-duration-fast: 120ms;
+  --vi-ref-duration-standard: 220ms;
+  --vi-ref-duration-slow: 420ms;
+  --vi-ref-duration-shine: 2800ms;
+  --vi-ref-ease-linear: linear;
+  --vi-ref-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --vi-ref-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --vi-ref-ease-shine: cubic-bezier(0.45, 0, 0.2, 1);
+  --vi-ref-z-base: 0;
+  --vi-ref-z-raised: 1;
+  --vi-ref-z-overlay: 8;
+  --vi-ref-z-popover: 20;
+
+  /* Semantic color roles. Components alias these instead of using reference values. */
+  --vi-color-canvas: var(--vi-ref-color-ink-1000);
+  --vi-color-surface: var(--vi-ref-color-ink-950);
+  --vi-color-surface-raised: var(--vi-ref-color-ink-900);
+  --vi-color-surface-hover: var(--vi-ref-color-ink-800);
+  --vi-color-text-primary: var(--vi-ref-color-paper-100);
+  --vi-color-text-secondary: var(--vi-ref-color-moss-300);
+  --vi-color-text-muted: var(--vi-ref-color-moss-500);
+  --vi-color-border: var(--vi-ref-color-moss-700);
+  --vi-color-border-soft: rgb(195 243 107 / 16%);
+  --vi-color-action: var(--vi-ref-color-lime-400);
+  --vi-color-action-text: var(--vi-ref-color-ink-1000);
+  --vi-color-action-soft: rgb(195 243 107 / 10%);
+  --vi-color-danger: var(--vi-ref-color-rose-400);
+  --vi-color-focus-ring: var(--vi-color-action);
+  --vi-color-backdrop: rgb(1 6 0 / 82%);
+  --vi-color-glass: rgb(255 255 255 / 5.5%);
+  --vi-color-glass-border: rgb(255 255 255 / 20%);
+
+  /* Semantic typography, geometry, motion and depth. */
+  --vi-font-heading: var(--vi-ref-font-family-heading);
+  --vi-font-body: var(--vi-ref-font-family-body);
+  --vi-font-display: var(--vi-ref-font-family-display);
+  --vi-font-code: var(--vi-ref-font-family-code);
+  --vi-space-1: var(--vi-ref-space-1);
+  --vi-space-2: var(--vi-ref-space-2);
+  --vi-space-3: var(--vi-ref-space-3);
+  --vi-space-4: var(--vi-ref-space-4);
+  --vi-space-5: var(--vi-ref-space-5);
+  --vi-space-6: var(--vi-ref-space-6);
+  --vi-space-8: var(--vi-ref-space-8);
+  --vi-space-10: var(--vi-ref-space-10);
+  --vi-space-12: var(--vi-ref-space-12);
+  --vi-radius-none: var(--vi-ref-radius-none);
+  --vi-radius-sm: var(--vi-ref-radius-sm);
+  --vi-radius-md: var(--vi-ref-radius-md);
+  --vi-radius-lg: var(--vi-ref-radius-lg);
+  --vi-radius-pill: var(--vi-ref-radius-pill);
+  --vi-border-width: var(--vi-ref-border-width-thin);
+  --vi-focus-width: var(--vi-ref-border-width-focus);
+  --vi-control-height-sm: var(--vi-ref-control-height-sm);
+  --vi-control-height-md: var(--vi-ref-control-height-md);
+  --vi-control-height-lg: var(--vi-ref-control-height-lg);
+  --vi-motion-duration-instant: var(--vi-ref-duration-instant);
+  --vi-motion-duration-fast: var(--vi-ref-duration-fast);
+  --vi-motion-duration-standard: var(--vi-ref-duration-standard);
+  --vi-motion-duration-slow: var(--vi-ref-duration-slow);
+  --vi-motion-duration-shine: var(--vi-ref-duration-shine);
+  --vi-motion-ease-linear: var(--vi-ref-ease-linear);
+  --vi-motion-ease-out: var(--vi-ref-ease-out);
+  --vi-motion-ease-in-out: var(--vi-ref-ease-in-out);
+  --vi-motion-ease-shine: var(--vi-ref-ease-shine);
+  --vi-depth-raised: var(--vi-ref-shadow-raised);
+  --vi-depth-overlay: var(--vi-ref-shadow-overlay);
+  --vi-layer-base: var(--vi-ref-z-base);
+  --vi-layer-raised: var(--vi-ref-z-raised);
+  --vi-layer-overlay: var(--vi-ref-z-overlay);
+  --vi-layer-popover: var(--vi-ref-z-popover);
+
+  /* Shared surface contract used by every configurable ViComponent. */
+  --vi-surface-border-width: var(--vi-border-width);
+  --vi-surface-shine-duration: var(--vi-motion-duration-shine);
+  --vi-surface-shine-ease: var(--vi-motion-ease-shine);
+  --vi-surface-glass-blur: var(--vi-ref-blur-glass);
+  --vi-surface-glass-shadow: var(--vi-depth-raised);
+
+  /* Compatibility aliases while the portfolio CSS migrates to Vi tokens. */
+  --color-bg: var(--vi-color-canvas);
+  --color-surface: var(--vi-color-surface);
+  --color-surface-raised: var(--vi-color-surface-raised);
+  --color-text: var(--vi-color-text-primary);
+  --color-text-muted: var(--vi-color-text-secondary);
+  --color-quiet-ink: var(--vi-color-text-muted);
+  --color-text-faint: var(--color-quiet-ink);
+  --color-line: var(--vi-color-border);
+  --color-line-soft: var(--vi-color-border-soft);
+  --color-clear-lime: var(--vi-color-action);
+  --color-accent: var(--color-clear-lime);
+  --color-accent-soft: var(--vi-color-action-soft);
+  --font-heading: var(--vi-font-heading);
+  --font-body: var(--vi-font-body);
+  --font-display: var(--vi-font-display);
+  --font-code: var(--vi-font-code);
+  --ease-out: var(--vi-motion-ease-out);
+  --ease-in-out: var(--vi-motion-ease-in-out);
+  --duration-fast: var(--vi-motion-duration-fast);
+  --duration-standard: var(--vi-motion-duration-standard);
+  --duration-slow: var(--vi-motion-duration-slow);
+}
+
+/* Light mode keeps the same moss, paper and action roles as the production palette. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --vi-color-canvas: var(--vi-ref-color-paper-100);
+  --vi-color-surface: #eaf1e5;
+  --vi-color-surface-raised: var(--vi-ref-color-white);
+  --vi-color-surface-hover: #dfead8;
+  --vi-color-text-primary: var(--vi-ref-color-ink-950);
+  --vi-color-text-secondary: #40533d;
+  --vi-color-text-muted: #4c6348;
+  --vi-color-border: #adbfa8;
+  --vi-color-border-soft: rgb(35 58 36 / 20%);
+  --vi-color-action: #355c20;
+  --vi-color-action-text: var(--vi-ref-color-white);
+  --vi-color-action-soft: rgb(53 92 32 / 12%);
+  --vi-color-danger: #a42448;
+  --vi-color-backdrop: rgb(1 6 0 / 55%);
+  --vi-color-glass: rgb(7 16 7 / 6%);
+  --vi-color-glass-border: rgb(7 16 7 / 16%);
+}
+
+
+// --- src/components/vicomponents/core/motion-props.ts ---
+export type ViMotionMode = "auto" | "none";
+
+export type ViSpringConfig = {
+  stiffness: number;
+  damping: number;
+  mass: number;
+};
+
+export type ViMotionConfig = {
+  feedbackDurationMs: number;
+  enterDurationMs: number;
+  exitDurationMs: number;
+  progressDurationMs: number;
+  ambientDurationMs: number;
+  spring: ViSpringConfig;
+};
+
+export type ViMotionProps = {
+  motion?: ViMotionMode;
+  motionConfig?: Partial<ViMotionConfig>;
+  paused?: boolean;
+};
+
+export const DEFAULT_VI_MOTION_CONFIG: ViMotionConfig = {
+  feedbackDurationMs: 120,
+  enterDurationMs: 220,
+  exitDurationMs: 160,
+  progressDurationMs: 420,
+  ambientDurationMs: 2800,
+  spring: {
+    stiffness: 420,
+    damping: 32,
+    mass: 1,
+  },
+};
+
+export const VI_SPRING_PRESETS = {
+  snappy: { stiffness: 520, damping: 34, mass: 0.8 },
+  gentle: { stiffness: 260, damping: 30, mass: 1 },
+  bouncy: { stiffness: 420, damping: 20, mass: 0.85 },
+  heavy: { stiffness: 220, damping: 38, mass: 1.35 },
+} as const satisfies Record<string, ViSpringConfig>;
+
+export function resolveViMotionConfig(
+  overrides: Partial<ViMotionConfig> = {},
+): ViMotionConfig {
+  return {
+    ...DEFAULT_VI_MOTION_CONFIG,
+    ...overrides,
+    spring: {
+      ...DEFAULT_VI_MOTION_CONFIG.spring,
+      ...overrides.spring,
+    },
+  };
+}
+
+
+// --- src/components/vicomponents/core/visual-props.ts ---
+import type { CSSProperties } from "react";
+
+export const VI_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "pill"] as const;
+
+export type ViRadius = (typeof VI_RADIUS_OPTIONS)[number];
+
+export type ViVisualConfig = {
+  shinyBorder: boolean;
+  glass: boolean;
+  radius: ViRadius;
+  activeColor: string;
+  standbyColor: string;
+  activeTextColor: string;
+  standbyTextColor: string;
+  borderColor: string;
+  shineColorA: string;
+  shineColorB: string;
+};
+
+export type ViVisualProps = Partial<ViVisualConfig>;
+
+export const DEFAULT_VI_VISUAL_CONFIG: ViVisualConfig = {
+  shinyBorder: false,
+  glass: false,
+  radius: "md",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+};
+
+export const GLASS_VI_VISUAL_CONFIG = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+} as const;
+
+export const VI_RADIUS_VALUES: Record<ViRadius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+export type ViVisualStyle = CSSProperties & {
+  "--vi-active": string;
+  "--vi-standby": string;
+  "--vi-active-text": string;
+  "--vi-standby-text": string;
+  "--vi-border": string;
+  "--vi-shine-a": string;
+  "--vi-shine-b": string;
+  "--vi-radius": string;
+  "--vi-focus-ring-color": string;
+  "--color-bg": string;
+  "--color-surface": string;
+  "--color-surface-raised": string;
+  "--color-text": string;
+  "--color-text-muted": string;
+  "--color-quiet-ink": string;
+  "--color-line": string;
+  "--color-clear-lime": string;
+  "--color-accent": string;
+  "--color-accent-soft": string;
+};
+
+export function createViVisualConfig(
+  overrides: ViVisualProps = {},
+): ViVisualConfig {
+  const definedOverrides = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value !== undefined),
+  ) as ViVisualProps;
+
+  return { ...DEFAULT_VI_VISUAL_CONFIG, ...definedOverrides };
+}
+
+export function resolveViPalette(config: ViVisualConfig) {
+  return config.glass ? GLASS_VI_VISUAL_CONFIG : config;
+}
+
+export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
+  const palette = resolveViPalette(config);
+
+  return {
+    "--vi-active": palette.activeColor,
+    "--vi-standby": palette.standbyColor,
+    "--vi-active-text": palette.activeTextColor,
+    "--vi-standby-text": palette.standbyTextColor,
+    "--vi-border": palette.borderColor,
+    "--vi-shine-a": palette.shineColorA,
+    "--vi-shine-b": palette.shineColorB,
+    "--vi-radius": VI_RADIUS_VALUES[config.radius],
+    "--vi-focus-ring-color": palette.activeColor,
+    "--color-bg": palette.standbyColor,
+    "--color-surface": palette.standbyColor,
+    "--color-surface-raised": `color-mix(in srgb, ${palette.standbyColor} 88%, white)`,
+    "--color-text": palette.standbyTextColor,
+    "--color-text-muted": `color-mix(in srgb, ${palette.standbyTextColor} 68%, transparent)`,
+    "--color-quiet-ink": `color-mix(in srgb, ${palette.standbyTextColor} 46%, transparent)`,
+    "--color-line": palette.borderColor,
+    "--color-clear-lime": palette.activeColor,
+    "--color-accent": palette.activeColor,
+    "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
+  };
+}
+
+
+// --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
+"use client";
+
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+
+import type { ViMotionMode } from "../../core/motion-props";
+
+/** The small style extension shared by action feedback components. */
+export type ViActionStyle = CSSProperties & Record<`--vi-${string}`, string | number>;
+
+export function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, value));
+}
+
+export function isViReducedMotion(mode: ViMotionMode = "auto") {
+  if (mode === "none") return true;
+  return typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    Boolean(window.matchMedia("(prefers-reduced-motion: reduce)")?.matches);
+}
+
+function subscribeReducedMotion(onStoreChange: () => void) {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return () => {};
+  }
+
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const update = () => onStoreChange();
+  media.addEventListener?.("change", update);
+  media.addListener?.(update);
+
+  return () => {
+    media.removeEventListener?.("change", update);
+    media.removeListener?.(update);
+  };
+}
+
+function getReducedMotionSnapshot() {
+  return isViReducedMotion("auto");
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
+}
+
+function noopSubscribe() {
+  return () => {};
+}
+
+function alwaysReduced() {
+  return true;
+}
+
+export function useViReducedMotion(mode: ViMotionMode = "auto") {
+  const prefersReducedMotion = useSyncExternalStore(
+    mode === "none" ? noopSubscribe : subscribeReducedMotion,
+    mode === "none" ? alwaysReduced : getReducedMotionSnapshot,
+    mode === "none" ? alwaysReduced : getReducedMotionServerSnapshot,
+  );
+
+  return mode === "none" || prefersReducedMotion;
+}
+
+export function useControllableBoolean(
+  controlled: boolean | undefined,
+  defaultValue: boolean,
+) {
+  const [uncontrolled, setUncontrolled] = useState(defaultValue);
+  const value = controlled ?? uncontrolled;
+
+  return [value, setUncontrolled] as const;
+}
+
+/** Tracks finite timers so transient feedback cannot outlive its component. */
+export function useActionTimeout() {
+  const timers = useRef(new Set<number>());
+
+  useEffect(() => {
+    const activeTimers = timers.current;
+    return () => {
+      for (const timer of activeTimers) window.clearTimeout(timer);
+      activeTimers.clear();
+    };
+  }, []);
+
+  return (callback: () => void, delayMs: number) => {
+    const timer = window.setTimeout(() => {
+      timers.current.delete(timer);
+      callback();
+    }, delayMs);
+    timers.current.add(timer);
+    return timer;
+  };
+}
+
+export function createActionVisualProps(
+  visual: {
+    activeColor?: string;
+    activeTextColor?: string;
+    borderColor?: string;
+    glass?: boolean;
+    radius?: "none" | "sm" | "md" | "lg" | "pill";
+    shineColorA?: string;
+    shineColorB?: string;
+    shinyBorder?: boolean;
+    standbyColor?: string;
+    standbyTextColor?: string;
+  },
+) {
+  return visual;
+}
+
+
+// --- src/components/vicomponents/components/undo-snackbar/index.ts ---
+export { ViUndoSnackbar, type ViUndoSnackbarPlacement, type ViUndoSnackbarProps } from "./vi-undo-snackbar";

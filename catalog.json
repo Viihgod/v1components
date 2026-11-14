@@ -1,0 +1,417 @@
+[
+  {
+    "name": "Segmented",
+    "slug": "segmented",
+    "codeSlug": "sliding-pill"
+  },
+  {
+    "name": "Spring modal",
+    "slug": "spring-modal",
+    "codeSlug": "spring-modal"
+  },
+  {
+    "name": "Elastic loading",
+    "slug": "elastic-loading",
+    "codeSlug": "elastic-loading"
+  },
+  {
+    "name": "Blast Impact",
+    "slug": "blast-impact",
+    "codeSlug": "blast-impact"
+  },
+  {
+    "name": "Hover glow container",
+    "slug": "hover-glow-container",
+    "codeSlug": "hover-glow-container"
+  },
+  {
+    "name": "Button",
+    "slug": "button",
+    "codeSlug": "button"
+  },
+  {
+    "name": "Text input",
+    "slug": "text-input",
+    "codeSlug": "text-input"
+  },
+  {
+    "name": "Dropdown",
+    "slug": "dropdown",
+    "codeSlug": "dropdown"
+  },
+  {
+    "name": "Selector",
+    "slug": "selector",
+    "codeSlug": "selector"
+  },
+  {
+    "name": "Color picker",
+    "slug": "color-picker",
+    "codeSlug": "color-picker"
+  },
+  {
+    "name": "Date picker",
+    "slug": "date-picker",
+    "codeSlug": "date-picker"
+  },
+  {
+    "name": "Magnetic button",
+    "slug": "magnetic-button",
+    "codeSlug": "magnetic-button"
+  },
+  {
+    "name": "Ripple feedback",
+    "slug": "ripple-feedback",
+    "codeSlug": "ripple-feedback"
+  },
+  {
+    "name": "Like burst",
+    "slug": "like-burst",
+    "codeSlug": "like-burst"
+  },
+  {
+    "name": "Push button",
+    "slug": "push-button",
+    "codeSlug": "push-button"
+  },
+  {
+    "name": "Copy button",
+    "slug": "copy-button",
+    "codeSlug": "copy-button"
+  },
+  {
+    "name": "Squish button",
+    "slug": "squish-button",
+    "codeSlug": "squish-button"
+  },
+  {
+    "name": "Keycap press",
+    "slug": "keycap-press",
+    "codeSlug": "keycap-press"
+  },
+  {
+    "name": "Liquid glass press",
+    "slug": "liquid-glass-press",
+    "codeSlug": "liquid-glass-press"
+  },
+  {
+    "name": "Badge counter",
+    "slug": "badge-counter",
+    "codeSlug": "badge-counter"
+  },
+  {
+    "name": "Bookmark toggle",
+    "slug": "bookmark-toggle",
+    "codeSlug": "bookmark-toggle"
+  },
+  {
+    "name": "Star rating",
+    "slug": "star-rating",
+    "codeSlug": "star-rating"
+  },
+  {
+    "name": "Floating label",
+    "slug": "floating-label",
+    "codeSlug": "floating-label"
+  },
+  {
+    "name": "Quantity stepper",
+    "slug": "quantity-stepper",
+    "codeSlug": "quantity-stepper"
+  },
+  {
+    "name": "Choice chips",
+    "slug": "choice-chips",
+    "codeSlug": "choice-chips"
+  },
+  {
+    "name": "Pin input",
+    "slug": "pin-input",
+    "codeSlug": "pin-input"
+  },
+  {
+    "name": "Password meter",
+    "slug": "password-meter",
+    "codeSlug": "password-meter"
+  },
+  {
+    "name": "Expanding search",
+    "slug": "expanding-search",
+    "codeSlug": "expanding-search"
+  },
+  {
+    "name": "Toggle pills",
+    "slug": "toggle-pills",
+    "codeSlug": "toggle-pills"
+  },
+  {
+    "name": "Swatch picker",
+    "slug": "swatch-picker",
+    "codeSlug": "swatch-picker"
+  },
+  {
+    "name": "Tag input",
+    "slug": "tag-input",
+    "codeSlug": "tag-input"
+  },
+  {
+    "name": "Switch spring",
+    "slug": "switch-spring",
+    "codeSlug": "switch-spring"
+  },
+  {
+    "name": "Checkbox draw",
+    "slug": "checkbox-draw",
+    "codeSlug": "checkbox-draw"
+  },
+  {
+    "name": "Card resize",
+    "slug": "card-resize",
+    "codeSlug": "card-resize"
+  },
+  {
+    "name": "Tab pill glide",
+    "slug": "tab-pill-glide",
+    "codeSlug": "tab-pill-glide"
+  },
+  {
+    "name": "Accordion spring",
+    "slug": "accordion-spring",
+    "codeSlug": "accordion-spring"
+  },
+  {
+    "name": "Speed dial fab",
+    "slug": "speed-dial-fab",
+    "codeSlug": "speed-dial-fab"
+  },
+  {
+    "name": "Orbital action menu",
+    "slug": "orbital-action-menu",
+    "codeSlug": "orbital-action-menu"
+  },
+  {
+    "name": "Contextual dock",
+    "slug": "contextual-dock",
+    "codeSlug": "contextual-dock"
+  },
+  {
+    "name": "Hover intent gate",
+    "slug": "hover-intent-gate",
+    "codeSlug": "hover-intent-gate"
+  },
+  {
+    "name": "Bento expand",
+    "slug": "bento-expand",
+    "codeSlug": "bento-expand"
+  },
+  {
+    "name": "Snap rail",
+    "slug": "snap-rail",
+    "codeSlug": "snap-rail"
+  },
+  {
+    "name": "Command palette bloom",
+    "slug": "command-palette-bloom",
+    "codeSlug": "command-palette-bloom"
+  },
+  {
+    "name": "Focus relay",
+    "slug": "focus-relay",
+    "codeSlug": "focus-relay"
+  },
+  {
+    "name": "Delayed tooltip",
+    "slug": "delayed-tooltip",
+    "codeSlug": "delayed-tooltip"
+  },
+  {
+    "name": "Hold to confirm",
+    "slug": "hold-to-confirm",
+    "codeSlug": "hold-to-confirm"
+  },
+  {
+    "name": "Rubber band slider",
+    "slug": "rubber-band-slider",
+    "codeSlug": "rubber-band-slider"
+  },
+  {
+    "name": "Rotary knob",
+    "slug": "rotary-knob",
+    "codeSlug": "rotary-knob"
+  },
+  {
+    "name": "Value scrubber",
+    "slug": "value-scrubber",
+    "codeSlug": "value-scrubber"
+  },
+  {
+    "name": "Slide to unlock",
+    "slug": "slide-to-unlock",
+    "codeSlug": "slide-to-unlock"
+  },
+  {
+    "name": "Inertial dial",
+    "slug": "inertial-dial",
+    "codeSlug": "inertial-dial"
+  },
+  {
+    "name": "Gesture chord",
+    "slug": "gesture-chord",
+    "codeSlug": "gesture-chord"
+  },
+  {
+    "name": "Kinetic xy pad",
+    "slug": "kinetic-xy-pad",
+    "codeSlug": "kinetic-xy-pad"
+  },
+  {
+    "name": "Momentum picker",
+    "slug": "momentum-picker",
+    "codeSlug": "momentum-picker"
+  },
+  {
+    "name": "Filmstrip scrubber",
+    "slug": "filmstrip-scrubber",
+    "codeSlug": "filmstrip-scrubber"
+  },
+  {
+    "name": "Hold to talk",
+    "slug": "hold-to-talk",
+    "codeSlug": "hold-to-talk"
+  },
+  {
+    "name": "Drag to dismiss",
+    "slug": "drag-to-dismiss",
+    "codeSlug": "drag-to-dismiss"
+  },
+  {
+    "name": "Swipe to reveal",
+    "slug": "swipe-to-reveal",
+    "codeSlug": "swipe-to-reveal"
+  },
+  {
+    "name": "Reorderable list",
+    "slug": "reorderable-list",
+    "codeSlug": "reorderable-list"
+  },
+  {
+    "name": "Elastic lasso",
+    "slug": "elastic-lasso",
+    "codeSlug": "elastic-lasso"
+  },
+  {
+    "name": "Drag stack collect",
+    "slug": "drag-stack-collect",
+    "codeSlug": "drag-stack-collect"
+  },
+  {
+    "name": "Lattice snap",
+    "slug": "lattice-snap",
+    "codeSlug": "lattice-snap"
+  },
+  {
+    "name": "Before after",
+    "slug": "before-after",
+    "codeSlug": "before-after"
+  },
+  {
+    "name": "Toast overshoot",
+    "slug": "toast-overshoot",
+    "codeSlug": "toast-overshoot"
+  },
+  {
+    "name": "Prompt composer",
+    "slug": "prompt-composer",
+    "codeSlug": "prompt-composer"
+  },
+  {
+    "name": "Status pill",
+    "slug": "status-pill",
+    "codeSlug": "status-pill"
+  },
+  {
+    "name": "Notification slide in",
+    "slug": "notification-slide-in",
+    "codeSlug": "notification-slide-in"
+  },
+  {
+    "name": "Undo snackbar",
+    "slug": "undo-snackbar",
+    "codeSlug": "undo-snackbar"
+  },
+  {
+    "name": "Submit states",
+    "slug": "submit-states",
+    "codeSlug": "submit-states"
+  },
+  {
+    "name": "Toast stack",
+    "slug": "toast-stack",
+    "codeSlug": "toast-stack"
+  },
+  {
+    "name": "Elastic progress",
+    "slug": "elastic-progress",
+    "codeSlug": "elastic-progress"
+  },
+  {
+    "name": "Segment loader",
+    "slug": "segment-loader",
+    "codeSlug": "segment-loader"
+  },
+  {
+    "name": "Orbit spinner",
+    "slug": "orbit-spinner",
+    "codeSlug": "orbit-spinner"
+  },
+  {
+    "name": "Progress ring",
+    "slug": "progress-ring",
+    "codeSlug": "progress-ring"
+  },
+  {
+    "name": "Step progress",
+    "slug": "step-progress",
+    "codeSlug": "step-progress"
+  },
+  {
+    "name": "Countdown ring",
+    "slug": "countdown-ring",
+    "codeSlug": "countdown-ring"
+  },
+  {
+    "name": "Skeleton to content",
+    "slug": "skeleton-to-content",
+    "codeSlug": "skeleton-to-content"
+  },
+  {
+    "name": "Indeterminate bar",
+    "slug": "indeterminate-bar",
+    "codeSlug": "indeterminate-bar"
+  },
+  {
+    "name": "Shimmer skeleton",
+    "slug": "shimmer-skeleton",
+    "codeSlug": "shimmer-skeleton"
+  },
+  {
+    "name": "Typing indicator",
+    "slug": "typing-indicator",
+    "codeSlug": "typing-indicator"
+  },
+  {
+    "name": "Battery charge",
+    "slug": "battery-charge",
+    "codeSlug": "battery-charge"
+  },
+  {
+    "name": "Signal bars",
+    "slug": "signal-bars",
+    "codeSlug": "signal-bars"
+  },
+  {
+    "name": "Wave loader",
+    "slug": "wave-loader",
+    "codeSlug": "wave-loader"
+  }
+]

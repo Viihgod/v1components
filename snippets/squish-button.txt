@@ -1,0 +1,1262 @@
+// Example.tsx
+import { SquishButtonDemo } from "./src/components/vicomponents/demos/squish-button";
+import "./src/components/vicomponents/tokens.css";
+import "./src/components/vicomponents/demos/demos.css";
+
+export default function Example() {
+  return <SquishButtonDemo />;
+}
+
+// Dependencies: react
+
+// --- src/components/vicomponents/components/squish-button/vi-squish-button.tsx ---
+"use client";
+
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+
+import type { ViMotionProps } from "../../core/motion-props";
+import { ViComponentSurface } from "../../core/vi-component-surface";
+import type { ViVisualProps } from "../../core/visual-props";
+import {
+  clamp,
+  createActionVisualProps,
+  type ViActionStyle,
+  useViReducedMotion,
+} from "../shared/action-feedback-utils";
+import "./vi-squish-button.css";
+
+export type ViSquishButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "children"
+> &
+  ViVisualProps &
+  ViMotionProps & {
+    children: ReactNode;
+    disabled?: boolean;
+    pressScaleX?: number;
+    pressScaleY?: number;
+  };
+
+export const ViSquishButton = forwardRef<HTMLButtonElement, ViSquishButtonProps>(
+  function ViSquishButton(
+    {
+      activeColor,
+      activeTextColor,
+      borderColor,
+      children,
+      className = "",
+      disabled = false,
+      glass,
+      motion = "auto",
+      motionConfig,
+      paused,
+      pressScaleX = 0.96,
+      pressScaleY = 0.92,
+      radius = "md",
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      standbyColor,
+      standbyTextColor,
+      style,
+      ...buttonProps
+    },
+    ref,
+  ) {
+    const reducedMotion = useViReducedMotion(motion);
+    void motionConfig;
+    void paused;
+
+    const visualProps = createActionVisualProps({
+      activeColor,
+      activeTextColor,
+      borderColor,
+      glass,
+      radius,
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      standbyColor,
+      standbyTextColor,
+    });
+    const surfaceStyle: ViActionStyle = {
+      ...style,
+      "--vi-squish-x": clamp(pressScaleX, 0.8, 1),
+      "--vi-squish-y": clamp(pressScaleY, 0.8, 1),
+    };
+
+    return (
+      <ViComponentSurface
+        {...buttonProps}
+        ref={ref}
+        as="button"
+        className={`vi-squish-button ${className}`.trim()}
+        contentAs="span"
+        data-motion={reducedMotion ? "reduced" : "auto"}
+        disabled={disabled}
+        style={surfaceStyle}
+        type="button"
+        visualProps={visualProps}
+      >
+        {children}
+      </ViComponentSurface>
+    );
+  },
+);
+
+
+// --- src/components/vicomponents/components/squish-button/vi-squish-button.css ---
+.vi-squish-button {
+  display: inline-flex;
+  min-height: var(--vi-control-height-md, 2.75rem);
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--vi-space-4, 1rem);
+  cursor: pointer;
+  transition: transform var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    background-color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out);
+  will-change: transform;
+}
+
+.vi-squish-button:active:not(:disabled) {
+  transform: scaleX(var(--vi-squish-x, 0.96)) scaleY(var(--vi-squish-y, 0.92));
+}
+
+.vi-squish-button[data-motion="reduced"] {
+  transition-duration: 0.01ms;
+}
+
+.vi-squish-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-squish-button {
+    transition-duration: 0.01ms;
+  }
+
+  .vi-squish-button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+
+// --- src/components/vicomponents/components/shared/action-feedback-utils.ts ---
+"use client";
+
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+
+import type { ViMotionMode } from "../../core/motion-props";
+
+/** The small style extension shared by action feedback components. */
+export type ViActionStyle = CSSProperties & Record<`--vi-${string}`, string | number>;
+
+export function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, value));
+}
+
+export function isViReducedMotion(mode: ViMotionMode = "auto") {
+  if (mode === "none") return true;
+  return typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    Boolean(window.matchMedia("(prefers-reduced-motion: reduce)")?.matches);
+}
+
+function subscribeReducedMotion(onStoreChange: () => void) {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return () => {};
+  }
+
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const update = () => onStoreChange();
+  media.addEventListener?.("change", update);
+  media.addListener?.(update);
+
+  return () => {
+    media.removeEventListener?.("change", update);
+    media.removeListener?.(update);
+  };
+}
+
+function getReducedMotionSnapshot() {
+  return isViReducedMotion("auto");
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
+}
+
+function noopSubscribe() {
+  return () => {};
+}
+
+function alwaysReduced() {
+  return true;
+}
+
+export function useViReducedMotion(mode: ViMotionMode = "auto") {
+  const prefersReducedMotion = useSyncExternalStore(
+    mode === "none" ? noopSubscribe : subscribeReducedMotion,
+    mode === "none" ? alwaysReduced : getReducedMotionSnapshot,
+    mode === "none" ? alwaysReduced : getReducedMotionServerSnapshot,
+  );
+
+  return mode === "none" || prefersReducedMotion;
+}
+
+export function useControllableBoolean(
+  controlled: boolean | undefined,
+  defaultValue: boolean,
+) {
+  const [uncontrolled, setUncontrolled] = useState(defaultValue);
+  const value = controlled ?? uncontrolled;
+
+  return [value, setUncontrolled] as const;
+}
+
+/** Tracks finite timers so transient feedback cannot outlive its component. */
+export function useActionTimeout() {
+  const timers = useRef(new Set<number>());
+
+  useEffect(() => {
+    const activeTimers = timers.current;
+    return () => {
+      for (const timer of activeTimers) window.clearTimeout(timer);
+      activeTimers.clear();
+    };
+  }, []);
+
+  return (callback: () => void, delayMs: number) => {
+    const timer = window.setTimeout(() => {
+      timers.current.delete(timer);
+      callback();
+    }, delayMs);
+    timers.current.add(timer);
+    return timer;
+  };
+}
+
+export function createActionVisualProps(
+  visual: {
+    activeColor?: string;
+    activeTextColor?: string;
+    borderColor?: string;
+    glass?: boolean;
+    radius?: "none" | "sm" | "md" | "lg" | "pill";
+    shineColorA?: string;
+    shineColorB?: string;
+    shinyBorder?: boolean;
+    standbyColor?: string;
+    standbyTextColor?: string;
+  },
+) {
+  return visual;
+}
+
+
+// --- src/components/vicomponents/demos/squish-button.tsx ---
+"use client";
+
+import type { ViVisualProps } from "../core/visual-props";
+
+import { ViSquishButton } from "../components/squish-button";
+
+export function SquishButtonDemo({ visual }: { visual?: ViVisualProps }) {
+  return <ViSquishButton {...visual}>Squish</ViSquishButton>;
+}
+
+
+// --- src/components/vicomponents/demos/demos.css ---
+.vi-route-demo {
+  position: relative;
+  display: grid;
+  min-height: 14rem;
+  place-items: center;
+  padding: 2rem;
+}
+
+.vi-route-demo__surface {
+  width: fit-content;
+  padding: 0.3rem;
+}
+
+.vi-route-demo__surface--wide {
+  width: min(100%, 30rem);
+}
+
+.vi-route-demo__content {
+  padding: 1rem;
+}
+
+.vi-route-demo__tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.vi-route-demo__tabs button,
+.vi-route-demo__dialog button {
+  min-height: 2.4rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--vi-radius);
+  background: transparent;
+  color: var(--vi-standby-text);
+}
+
+.vi-route-demo__tabs button[aria-selected="true"] {
+  border-color: var(--vi-active);
+  background: var(--vi-active);
+  color: var(--vi-active-text);
+}
+
+.vi-route-demo__content small,
+.vi-route-demo__content > span {
+  display: block;
+  color: var(--vi-active);
+  font-family: var(--vi-font-code);
+  font-size: var(--vi-ref-font-size-xs);
+  letter-spacing: var(--vi-ref-letter-spacing-label);
+  text-transform: uppercase;
+}
+
+.vi-route-demo__content strong {
+  display: block;
+  margin-top: 2rem;
+  color: var(--vi-standby-text);
+  font-size: 1.25rem;
+}
+
+.vi-route-demo__content p {
+  margin: 0.75rem 0 0;
+  color: var(--vi-color-text-secondary);
+}
+
+.vi-route-demo__dialog {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  gap: 1rem;
+  width: min(100% - 2rem, 22rem);
+  padding: 1.3rem;
+  border: 1px solid var(--vi-color-action);
+  background: var(--vi-color-surface-raised);
+  box-shadow: var(--vi-depth-overlay);
+}
+
+.vi-route-demo__dialog button {
+  width: fit-content;
+  border-color: var(--vi-color-border);
+}
+
+.vi-route-demo__empty {
+  margin: 0;
+  color: var(--vi-color-text-secondary);
+}
+
+.vi-b06-demo {
+  display: grid;
+  gap: var(--vi-space-3, 0.75rem);
+  width: min(100%, 34rem);
+  justify-items: center;
+}
+
+.vi-b06-demo__trigger {
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: 1px solid var(--vi-color-border);
+  border-radius: var(--vi-radius-pill, 999px);
+  background: transparent;
+  color: var(--vi-color-text-primary);
+  font: inherit;
+}
+
+.vi-b06-demo__status {
+  color: var(--vi-color-action);
+}
+
+.vi-b07-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+}
+
+.vi-b07-demo--center {
+  min-height: 9rem;
+  place-items: center;
+}
+
+.vi-b07-demo button {
+  width: fit-content;
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius-pill, 999px);
+  background: var(--vi-active, var(--vi-color-action));
+  color: var(--vi-active-text, var(--vi-color-action-text));
+  font: inherit;
+  cursor: pointer;
+}
+
+/* The progress stepper owns its full-width, text-first button treatment;
+   keep the shared demo action skin from turning its text into a lime pill. */
+.vi-b07-demo .vi-b07-steps__button {
+  width: 100%;
+  min-height: 0;
+  padding: var(--vi-space-2, 0.5rem);
+  border: 0;
+  border-radius: var(--vi-radius-sm, 8px);
+  background: transparent;
+  color: var(--vi-b07-text);
+}
+
+.vi-b07-demo__content {
+  min-height: 4rem;
+  display: grid;
+  place-items: center start;
+  color: var(--vi-color-text-secondary);
+}
+
+.vi-b08-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 5rem;
+  place-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  text-align: center;
+}
+
+.vi-b08-demo button {
+  width: fit-content;
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius-pill, 999px);
+  background: var(--vi-active, var(--vi-color-action));
+  color: var(--vi-active-text, var(--vi-color-action-text));
+  font: inherit;
+  cursor: pointer;
+}
+
+.vi-b08-demo__error {
+  display: inline-block;
+  padding: var(--vi-space-2, 0.5rem) var(--vi-space-3, 0.75rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-color-danger);
+  border-radius: var(--vi-radius-sm, 8px);
+  color: var(--vi-color-danger);
+}
+
+.vi-b09-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 5rem;
+  align-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b09-demo--center { min-height: 9rem; place-items: center; }
+.vi-b09-demo > .vi-b09-marquee { width: 100%; }
+.vi-b09-demo .vi-b09-float,
+.vi-b09-demo .vi-b09-blob,
+.vi-b09-demo .vi-b09-neon,
+.vi-b09-demo .vi-b09-border-morph { padding: var(--vi-space-4, 1rem); }
+
+.vi-b10-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 7rem;
+  place-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b10-demo--center { min-height: 10rem; }
+.vi-b10-demo button {
+  min-height: var(--vi-control-height-sm, 2rem);
+  padding: 0 var(--vi-space-3, 0.75rem);
+  border: 1px solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius-pill, 999px);
+  background: var(--vi-active, var(--vi-color-action));
+  color: var(--vi-active-text, var(--vi-color-action-text));
+  font: inherit;
+}
+
+.vi-b11-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 9rem;
+  align-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b11-demo--center { place-items: center; }
+.vi-b11-demo > .vi-b11-pages,
+.vi-b11-demo > .vi-b11-flip,
+.vi-b11-demo > .vi-b11-cube,
+.vi-b11-demo > .vi-b11-fold,
+.vi-b11-demo > .vi-b11-depth { width: min(100%, 30rem); }
+
+.vi-b12-demo {
+  display: grid;
+  gap: var(--vi-space-4, 1rem);
+  width: min(100%, 42rem);
+  min-height: 9rem;
+  align-items: center;
+  padding: var(--vi-space-4, 1rem);
+  border: var(--vi-border-width, 1px) solid var(--vi-border, var(--vi-color-border));
+  border-radius: var(--vi-radius, 16px);
+  background: var(--vi-standby, var(--vi-color-surface));
+  color: var(--vi-standby-text, var(--vi-color-text-primary));
+}
+
+.vi-b13-demo {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  justify-items: center;
+  padding: var(--vi-space-4, 1rem) 0;
+}
+
+.vi-b13-demo > * {
+  max-width: 100%;
+}
+
+.vi-b12-demo > * { width: min(100%, 36rem); }
+.vi-b12-demo > .vi-b12-phase-lock,
+.vi-b12-demo > .vi-b12-braille { justify-self: center; }
+
+.vi-b14-demo {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 8rem;
+  align-items: center;
+  justify-items: center;
+  padding: var(--vi-space-4, 1rem) 0;
+}
+
+.vi-b14-demo > * {
+  width: min(100%, 36rem);
+  max-width: 100%;
+}
+
+.vi-b14-demo--text {
+  min-height: 5rem;
+  justify-items: start;
+}
+
+.vi-like-burst-demo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vi-space-3, 0.75rem);
+}
+
+.vi-compare-art { position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent 0 15px, currentColor 16px 17px); color: color-mix(in srgb, var(--vi-active) 20%, transparent); }
+.vi-compare-art--after { color: color-mix(in srgb, var(--vi-active) 65%, transparent); }
+
+.vi-hold-confirm-demo {
+  display: grid;
+  justify-items: center;
+  gap: var(--vi-space-2, 0.5rem);
+}
+
+
+// --- src/components/vicomponents/tokens.css ---
+:root {
+  color-scheme: dark;
+
+  /* Reference palette. Raw values live only in this layer. */
+  --vi-ref-color-ink-1000: #010600;
+  --vi-ref-color-ink-950: #071007;
+  --vi-ref-color-ink-900: #0d170d;
+  --vi-ref-color-ink-800: #162216;
+  --vi-ref-color-moss-700: #233a24;
+  --vi-ref-color-moss-500: #637262;
+  --vi-ref-color-moss-300: #9aaa98;
+  --vi-ref-color-lime-400: #c3f36b;
+  --vi-ref-color-rose-400: #ff8095;
+  --vi-ref-color-paper-100: #f3f8f0;
+  --vi-ref-color-white: #ffffff;
+  --vi-ref-color-black: #000000;
+
+  /* Reference typography. Font files are supplied by next/font in RootLayout. */
+  --vi-ref-font-family-heading: var(--font-space-grotesk), "Space Grotesk", Arial, sans-serif;
+  --vi-ref-font-family-body: var(--font-dm-sans), "DM Sans", Arial, Helvetica, sans-serif;
+  --vi-ref-font-family-display: var(--font-dm-serif-display), "DM Serif Display", Georgia, "Times New Roman", serif;
+  --vi-ref-font-family-code: var(--font-jetbrains-mono), "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --vi-ref-font-size-2xs: 0.54rem;
+  --vi-ref-font-size-xs: 0.62rem;
+  --vi-ref-font-size-sm: 0.72rem;
+  --vi-ref-font-size-md: 0.82rem;
+  --vi-ref-font-size-lg: 1rem;
+  --vi-ref-font-size-xl: 1.25rem;
+  --vi-ref-line-height-tight: 1.05;
+  --vi-ref-line-height-control: 1.2;
+  --vi-ref-line-height-body: 1.5;
+  --vi-ref-letter-spacing-label: 0.07em;
+  --vi-ref-letter-spacing-heading: -0.04em;
+
+  /* Reference dimensions. */
+  --vi-ref-space-0: 0;
+  --vi-ref-space-1: 0.25rem;
+  --vi-ref-space-2: 0.5rem;
+  --vi-ref-space-3: 0.75rem;
+  --vi-ref-space-4: 1rem;
+  --vi-ref-space-5: 1.25rem;
+  --vi-ref-space-6: 1.5rem;
+  --vi-ref-space-8: 2rem;
+  --vi-ref-space-10: 2.5rem;
+  --vi-ref-space-12: 3rem;
+  --vi-ref-control-height-sm: 2rem;
+  --vi-ref-control-height-md: 2.75rem;
+  --vi-ref-control-height-lg: 3.25rem;
+  --vi-ref-control-icon-sm: 0.875rem;
+  --vi-ref-control-icon-md: 1rem;
+  --vi-ref-control-icon-lg: 1.25rem;
+  --vi-ref-border-width-thin: 1px;
+  --vi-ref-border-width-focus: 2px;
+  --vi-ref-radius-none: 0px;
+  --vi-ref-radius-sm: 8px;
+  --vi-ref-radius-md: 16px;
+  --vi-ref-radius-lg: 28px;
+  --vi-ref-radius-pill: 999px;
+
+  /* Reference material, motion and layering. */
+  --vi-ref-blur-glass: 18px;
+  --vi-ref-shadow-raised: 0 1rem 2.5rem rgb(0 0 0 / 16%);
+  --vi-ref-shadow-overlay: 0 1rem 3rem rgb(0 0 0 / 32%);
+  --vi-ref-duration-instant: 80ms;
+  --vi-ref-duration-fast: 120ms;
+  --vi-ref-duration-standard: 220ms;
+  --vi-ref-duration-slow: 420ms;
+  --vi-ref-duration-shine: 2800ms;
+  --vi-ref-ease-linear: linear;
+  --vi-ref-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --vi-ref-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --vi-ref-ease-shine: cubic-bezier(0.45, 0, 0.2, 1);
+  --vi-ref-z-base: 0;
+  --vi-ref-z-raised: 1;
+  --vi-ref-z-overlay: 8;
+  --vi-ref-z-popover: 20;
+
+  /* Semantic color roles. Components alias these instead of using reference values. */
+  --vi-color-canvas: var(--vi-ref-color-ink-1000);
+  --vi-color-surface: var(--vi-ref-color-ink-950);
+  --vi-color-surface-raised: var(--vi-ref-color-ink-900);
+  --vi-color-surface-hover: var(--vi-ref-color-ink-800);
+  --vi-color-text-primary: var(--vi-ref-color-paper-100);
+  --vi-color-text-secondary: var(--vi-ref-color-moss-300);
+  --vi-color-text-muted: var(--vi-ref-color-moss-500);
+  --vi-color-border: var(--vi-ref-color-moss-700);
+  --vi-color-border-soft: rgb(195 243 107 / 16%);
+  --vi-color-action: var(--vi-ref-color-lime-400);
+  --vi-color-action-text: var(--vi-ref-color-ink-1000);
+  --vi-color-action-soft: rgb(195 243 107 / 10%);
+  --vi-color-danger: var(--vi-ref-color-rose-400);
+  --vi-color-focus-ring: var(--vi-color-action);
+  --vi-color-backdrop: rgb(1 6 0 / 82%);
+  --vi-color-glass: rgb(255 255 255 / 5.5%);
+  --vi-color-glass-border: rgb(255 255 255 / 20%);
+
+  /* Semantic typography, geometry, motion and depth. */
+  --vi-font-heading: var(--vi-ref-font-family-heading);
+  --vi-font-body: var(--vi-ref-font-family-body);
+  --vi-font-display: var(--vi-ref-font-family-display);
+  --vi-font-code: var(--vi-ref-font-family-code);
+  --vi-space-1: var(--vi-ref-space-1);
+  --vi-space-2: var(--vi-ref-space-2);
+  --vi-space-3: var(--vi-ref-space-3);
+  --vi-space-4: var(--vi-ref-space-4);
+  --vi-space-5: var(--vi-ref-space-5);
+  --vi-space-6: var(--vi-ref-space-6);
+  --vi-space-8: var(--vi-ref-space-8);
+  --vi-space-10: var(--vi-ref-space-10);
+  --vi-space-12: var(--vi-ref-space-12);
+  --vi-radius-none: var(--vi-ref-radius-none);
+  --vi-radius-sm: var(--vi-ref-radius-sm);
+  --vi-radius-md: var(--vi-ref-radius-md);
+  --vi-radius-lg: var(--vi-ref-radius-lg);
+  --vi-radius-pill: var(--vi-ref-radius-pill);
+  --vi-border-width: var(--vi-ref-border-width-thin);
+  --vi-focus-width: var(--vi-ref-border-width-focus);
+  --vi-control-height-sm: var(--vi-ref-control-height-sm);
+  --vi-control-height-md: var(--vi-ref-control-height-md);
+  --vi-control-height-lg: var(--vi-ref-control-height-lg);
+  --vi-motion-duration-instant: var(--vi-ref-duration-instant);
+  --vi-motion-duration-fast: var(--vi-ref-duration-fast);
+  --vi-motion-duration-standard: var(--vi-ref-duration-standard);
+  --vi-motion-duration-slow: var(--vi-ref-duration-slow);
+  --vi-motion-duration-shine: var(--vi-ref-duration-shine);
+  --vi-motion-ease-linear: var(--vi-ref-ease-linear);
+  --vi-motion-ease-out: var(--vi-ref-ease-out);
+  --vi-motion-ease-in-out: var(--vi-ref-ease-in-out);
+  --vi-motion-ease-shine: var(--vi-ref-ease-shine);
+  --vi-depth-raised: var(--vi-ref-shadow-raised);
+  --vi-depth-overlay: var(--vi-ref-shadow-overlay);
+  --vi-layer-base: var(--vi-ref-z-base);
+  --vi-layer-raised: var(--vi-ref-z-raised);
+  --vi-layer-overlay: var(--vi-ref-z-overlay);
+  --vi-layer-popover: var(--vi-ref-z-popover);
+
+  /* Shared surface contract used by every configurable ViComponent. */
+  --vi-surface-border-width: var(--vi-border-width);
+  --vi-surface-shine-duration: var(--vi-motion-duration-shine);
+  --vi-surface-shine-ease: var(--vi-motion-ease-shine);
+  --vi-surface-glass-blur: var(--vi-ref-blur-glass);
+  --vi-surface-glass-shadow: var(--vi-depth-raised);
+
+  /* Compatibility aliases while the portfolio CSS migrates to Vi tokens. */
+  --color-bg: var(--vi-color-canvas);
+  --color-surface: var(--vi-color-surface);
+  --color-surface-raised: var(--vi-color-surface-raised);
+  --color-text: var(--vi-color-text-primary);
+  --color-text-muted: var(--vi-color-text-secondary);
+  --color-quiet-ink: var(--vi-color-text-muted);
+  --color-text-faint: var(--color-quiet-ink);
+  --color-line: var(--vi-color-border);
+  --color-line-soft: var(--vi-color-border-soft);
+  --color-clear-lime: var(--vi-color-action);
+  --color-accent: var(--color-clear-lime);
+  --color-accent-soft: var(--vi-color-action-soft);
+  --font-heading: var(--vi-font-heading);
+  --font-body: var(--vi-font-body);
+  --font-display: var(--vi-font-display);
+  --font-code: var(--vi-font-code);
+  --ease-out: var(--vi-motion-ease-out);
+  --ease-in-out: var(--vi-motion-ease-in-out);
+  --duration-fast: var(--vi-motion-duration-fast);
+  --duration-standard: var(--vi-motion-duration-standard);
+  --duration-slow: var(--vi-motion-duration-slow);
+}
+
+/* Light mode keeps the same moss, paper and action roles as the production palette. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --vi-color-canvas: var(--vi-ref-color-paper-100);
+  --vi-color-surface: #eaf1e5;
+  --vi-color-surface-raised: var(--vi-ref-color-white);
+  --vi-color-surface-hover: #dfead8;
+  --vi-color-text-primary: var(--vi-ref-color-ink-950);
+  --vi-color-text-secondary: #40533d;
+  --vi-color-text-muted: #4c6348;
+  --vi-color-border: #adbfa8;
+  --vi-color-border-soft: rgb(35 58 36 / 20%);
+  --vi-color-action: #355c20;
+  --vi-color-action-text: var(--vi-ref-color-white);
+  --vi-color-action-soft: rgb(53 92 32 / 12%);
+  --vi-color-danger: #a42448;
+  --vi-color-backdrop: rgb(1 6 0 / 55%);
+  --vi-color-glass: rgb(7 16 7 / 6%);
+  --vi-color-glass-border: rgb(7 16 7 / 16%);
+}
+
+
+// --- src/components/vicomponents/core/motion-props.ts ---
+export type ViMotionMode = "auto" | "none";
+
+export type ViSpringConfig = {
+  stiffness: number;
+  damping: number;
+  mass: number;
+};
+
+export type ViMotionConfig = {
+  feedbackDurationMs: number;
+  enterDurationMs: number;
+  exitDurationMs: number;
+  progressDurationMs: number;
+  ambientDurationMs: number;
+  spring: ViSpringConfig;
+};
+
+export type ViMotionProps = {
+  motion?: ViMotionMode;
+  motionConfig?: Partial<ViMotionConfig>;
+  paused?: boolean;
+};
+
+export const DEFAULT_VI_MOTION_CONFIG: ViMotionConfig = {
+  feedbackDurationMs: 120,
+  enterDurationMs: 220,
+  exitDurationMs: 160,
+  progressDurationMs: 420,
+  ambientDurationMs: 2800,
+  spring: {
+    stiffness: 420,
+    damping: 32,
+    mass: 1,
+  },
+};
+
+export const VI_SPRING_PRESETS = {
+  snappy: { stiffness: 520, damping: 34, mass: 0.8 },
+  gentle: { stiffness: 260, damping: 30, mass: 1 },
+  bouncy: { stiffness: 420, damping: 20, mass: 0.85 },
+  heavy: { stiffness: 220, damping: 38, mass: 1.35 },
+} as const satisfies Record<string, ViSpringConfig>;
+
+export function resolveViMotionConfig(
+  overrides: Partial<ViMotionConfig> = {},
+): ViMotionConfig {
+  return {
+    ...DEFAULT_VI_MOTION_CONFIG,
+    ...overrides,
+    spring: {
+      ...DEFAULT_VI_MOTION_CONFIG.spring,
+      ...overrides.spring,
+    },
+  };
+}
+
+
+// --- src/components/vicomponents/core/vi-component-surface.tsx ---
+"use client";
+
+import {
+  forwardRef,
+  type ComponentPropsWithoutRef,
+  type ComponentPropsWithRef,
+  type CSSProperties,
+  type ElementType,
+  type ForwardRefRenderFunction,
+  type PointerEvent,
+  type PointerEventHandler,
+  type ReactElement,
+  type ReactNode,
+} from "react";
+
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  type ViVisualConfig,
+  type ViVisualProps,
+} from "./visual-props";
+import "./vi-component-surface.css";
+
+type ViSurfaceStyle = CSSProperties & {
+  "--vi-glow-x": string;
+  "--vi-glow-y": string;
+};
+
+type ViComponentSurfaceOwnProps = {
+  children: ReactNode;
+  className?: string;
+  config?: ViVisualConfig;
+  contentAs?: "div" | "span";
+  contentClassName?: string;
+  hoverGlow?: boolean;
+  hoverGlowStrength?: "soft" | "medium" | "strong";
+  onPointerDown?: PointerEventHandler<HTMLElement>;
+  onPointerMove?: PointerEventHandler<HTMLElement>;
+  visualProps?: ViVisualProps;
+};
+
+export type ViComponentSurfaceProps<T extends ElementType = "div"> =
+  ViComponentSurfaceOwnProps &
+    Omit<ComponentPropsWithoutRef<T>, keyof ViComponentSurfaceOwnProps | "as" | "children" | "style"> & {
+      as?: T;
+      style?: CSSProperties;
+    };
+
+function ViComponentSurfaceImpl<T extends ElementType = "div">(
+  {
+    as,
+    children,
+    className = "",
+    config,
+    contentAs = "div",
+    contentClassName = "",
+    hoverGlow = false,
+    hoverGlowStrength = "medium",
+    onPointerDown,
+    onPointerMove,
+    style: styleProp,
+    visualProps,
+    ...elementProps
+  }: ViComponentSurfaceProps<T>,
+  ref: ComponentPropsWithRef<T>["ref"],
+) {
+  const Component = (as ?? "div") as ElementType;
+  const resolvedConfig = config ?? createViVisualConfig(visualProps);
+
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      onPointerMove?.(event);
+      return;
+    }
+
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+
+    event.currentTarget.style.setProperty("--vi-glow-x", `${x.toFixed(2)}%`);
+    event.currentTarget.style.setProperty("--vi-glow-y", `${y.toFixed(2)}%`);
+    onPointerMove?.(event);
+  }
+
+  const style: ViSurfaceStyle = {
+    ...createViVisualStyle(resolvedConfig),
+    ...styleProp,
+    "--vi-glow-x": "50%",
+    "--vi-glow-y": "50%",
+  };
+  const Content = contentAs;
+
+  return (
+    <Component
+      {...elementProps}
+      ref={ref}
+      className={`vi-component-surface ${className}`.trim()}
+      data-focus-contract="vi-surface"
+      data-glass={resolvedConfig.glass}
+      data-hover-glow={hoverGlow}
+      data-hover-glow-strength={hoverGlowStrength}
+      data-shiny={resolvedConfig.shinyBorder}
+      onPointerDown={onPointerDown}
+      onPointerMove={hoverGlow ? handlePointerMove : onPointerMove}
+      style={style}
+    >
+      <span className="vi-component-surface__shine" aria-hidden="true" />
+      <span className="vi-component-surface__hover-glow" aria-hidden="true" />
+      <Content className={`vi-component-surface__content ${contentClassName}`.trim()}>
+        {children}
+      </Content>
+    </Component>
+  );
+}
+
+const ViComponentSurfaceForwardRef = forwardRef(
+  ViComponentSurfaceImpl as unknown as ForwardRefRenderFunction<unknown, ViComponentSurfaceProps>,
+);
+
+export const ViComponentSurface = ViComponentSurfaceForwardRef as <
+  T extends ElementType = "div",
+>(
+  props: ViComponentSurfaceProps<T> & { ref?: ComponentPropsWithRef<T>["ref"] },
+) => ReactElement | null;
+
+export type { ViComponentSurfaceOwnProps };
+
+
+// --- src/components/vicomponents/core/visual-props.ts ---
+import type { CSSProperties } from "react";
+
+export const VI_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "pill"] as const;
+
+export type ViRadius = (typeof VI_RADIUS_OPTIONS)[number];
+
+export type ViVisualConfig = {
+  shinyBorder: boolean;
+  glass: boolean;
+  radius: ViRadius;
+  activeColor: string;
+  standbyColor: string;
+  activeTextColor: string;
+  standbyTextColor: string;
+  borderColor: string;
+  shineColorA: string;
+  shineColorB: string;
+};
+
+export type ViVisualProps = Partial<ViVisualConfig>;
+
+export const DEFAULT_VI_VISUAL_CONFIG: ViVisualConfig = {
+  shinyBorder: false,
+  glass: false,
+  radius: "md",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+};
+
+export const GLASS_VI_VISUAL_CONFIG = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+} as const;
+
+export const VI_RADIUS_VALUES: Record<ViRadius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+export type ViVisualStyle = CSSProperties & {
+  "--vi-active": string;
+  "--vi-standby": string;
+  "--vi-active-text": string;
+  "--vi-standby-text": string;
+  "--vi-border": string;
+  "--vi-shine-a": string;
+  "--vi-shine-b": string;
+  "--vi-radius": string;
+  "--vi-focus-ring-color": string;
+  "--color-bg": string;
+  "--color-surface": string;
+  "--color-surface-raised": string;
+  "--color-text": string;
+  "--color-text-muted": string;
+  "--color-quiet-ink": string;
+  "--color-line": string;
+  "--color-clear-lime": string;
+  "--color-accent": string;
+  "--color-accent-soft": string;
+};
+
+export function createViVisualConfig(
+  overrides: ViVisualProps = {},
+): ViVisualConfig {
+  const definedOverrides = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value !== undefined),
+  ) as ViVisualProps;
+
+  return { ...DEFAULT_VI_VISUAL_CONFIG, ...definedOverrides };
+}
+
+export function resolveViPalette(config: ViVisualConfig) {
+  return config.glass ? GLASS_VI_VISUAL_CONFIG : config;
+}
+
+export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
+  const palette = resolveViPalette(config);
+
+  return {
+    "--vi-active": palette.activeColor,
+    "--vi-standby": palette.standbyColor,
+    "--vi-active-text": palette.activeTextColor,
+    "--vi-standby-text": palette.standbyTextColor,
+    "--vi-border": palette.borderColor,
+    "--vi-shine-a": palette.shineColorA,
+    "--vi-shine-b": palette.shineColorB,
+    "--vi-radius": VI_RADIUS_VALUES[config.radius],
+    "--vi-focus-ring-color": palette.activeColor,
+    "--color-bg": palette.standbyColor,
+    "--color-surface": palette.standbyColor,
+    "--color-surface-raised": `color-mix(in srgb, ${palette.standbyColor} 88%, white)`,
+    "--color-text": palette.standbyTextColor,
+    "--color-text-muted": `color-mix(in srgb, ${palette.standbyTextColor} 68%, transparent)`,
+    "--color-quiet-ink": `color-mix(in srgb, ${palette.standbyTextColor} 46%, transparent)`,
+    "--color-line": palette.borderColor,
+    "--color-clear-lime": palette.activeColor,
+    "--color-accent": palette.activeColor,
+    "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
+  };
+}
+
+
+// --- src/components/vicomponents/components/squish-button/index.ts ---
+export { ViSquishButton, type ViSquishButtonProps } from "./vi-squish-button";
+
+
+// --- src/components/vicomponents/core/vi-component-surface.css ---
+.vi-component-surface {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: visible;
+  border: var(--vi-surface-border-width) solid var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+  color: var(--vi-standby-text);
+  transition:
+    border-color var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    background-color var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-out, ease-out),
+    box-shadow var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-component-surface:focus-visible {
+  outline: var(--vi-focus-width, 2px) solid var(--vi-focus-ring-color, var(--vi-active));
+  outline-offset: var(--vi-focus-offset, 3px);
+}
+
+.vi-component-surface.pong-game {
+  border-color: var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+}
+
+.vi-component-surface__shine,
+.vi-component-surface__hover-glow {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  overflow: hidden;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vi-component-surface__shine {
+  background: linear-gradient(
+    112deg,
+    transparent 12%,
+    transparent 33%,
+    var(--vi-shine-b) 44%,
+    var(--vi-shine-a) 50%,
+    var(--vi-shine-b) 56%,
+    transparent 67%,
+    transparent 88%
+  ) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+  opacity: 0.92;
+  animation: vi-component-shine var(--vi-surface-shine-duration) var(--vi-surface-shine-ease) infinite;
+}
+
+.vi-component-surface__hover-glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-component-surface__hover-glow::before,
+.vi-component-surface__hover-glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vi-component-surface__hover-glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(
+      circle at var(--vi-glow-x) var(--vi-glow-y),
+      var(--vi-active) 0,
+      color-mix(in srgb, var(--vi-active) 72%, transparent) 7%,
+      color-mix(in srgb, var(--vi-active) 20%, transparent) 18%,
+      transparent 42%
+    ) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface__hover-glow::after {
+  z-index: 1;
+  background: radial-gradient(
+    circle at var(--vi-glow-x) var(--vi-glow-y),
+    color-mix(in srgb, var(--vi-active) 10%, transparent),
+    transparent 48%
+  );
+}
+
+.vi-component-surface[data-hover-glow="true"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.72;
+}
+
+.vi-component-surface[data-hover-glow-strength="soft"] .vi-component-surface__hover-glow {
+  opacity: 0;
+  filter: saturate(0.75);
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.42;
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 1;
+}
+
+.vi-component-surface[data-glass="true"] {
+  border-color: var(--vi-border);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 8.5%), rgb(255 255 255 / 2.5%)),
+    var(--vi-standby);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 12%),
+    inset 0 -1px 0 rgb(255 255 255 / 3.5%),
+    var(--vi-surface-glass-shadow);
+  -webkit-backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+  backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+}
+
+.vi-component-surface__content {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-width: 0;
+}
+
+@keyframes vi-component-shine {
+  0%,
+  18% {
+    background-position: 145% center;
+  }
+  72%,
+  100% {
+    background-position: -45% center;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vi-component-surface[data-glass="true"] {
+    background: #161b16;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+button.vi-component-surface > .vi-component-surface__content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--vi-space-2, 0.5rem);
+}

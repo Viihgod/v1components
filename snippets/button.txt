@@ -1,0 +1,741 @@
+// Complete portable ViButton
+// Dependency: npm install @phosphor-icons/react
+// Create each file below, then render <Example />.
+
+// Example.tsx
+import { ViButton } from "./vi-button";
+
+export default function Example() {
+  return (
+    <ViButton
+      label={"Explore work"}
+      variant={"active"}
+      size={"md"}
+      icon={"arrow"}
+      iconPosition={"right"}
+      bordered={true}
+      loading={false}
+      disabled={false}
+    shinyBorder={false}
+    glass={false}
+    radius={"pill"}
+    activeColor={"#c3f36b"}
+    standbyColor={"#071007"}
+    activeTextColor={"#010600"}
+    standbyTextColor={"#f3f8f0"}
+    borderColor={"#233a24"}
+    shineColorA={"#f6ffe2"}
+    shineColorB={"#c3f36b"}
+    />
+  );
+}
+
+// vi-button.tsx
+"use client";
+
+import {
+  ArrowUpRight,
+  GearSix,
+  Plus,
+  type Icon,
+} from "@phosphor-icons/react";
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+} from "react";
+
+import {
+  createViVisualConfig,
+  setViHoverOrigin,
+  type ViVisualProps,
+} from "./vi-component-config";
+import { ViComponentSurface } from "./vi-component-surface";
+import "./vi-button.css";
+
+export const VI_BUTTON_ICONS = ["arrow", "plus", "settings"] as const;
+export const VI_BUTTON_ICON_POSITIONS = ["none", "left", "right", "only"] as const;
+export const VI_BUTTON_SIZES = ["sm", "md", "lg"] as const;
+export const VI_BUTTON_VARIANTS = ["active", "standby"] as const;
+
+export type ViButtonIcon = (typeof VI_BUTTON_ICONS)[number];
+export type ViButtonIconPosition = (typeof VI_BUTTON_ICON_POSITIONS)[number];
+export type ViButtonSize = (typeof VI_BUTTON_SIZES)[number];
+export type ViButtonVariant = (typeof VI_BUTTON_VARIANTS)[number];
+
+export type ViButtonProps = Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "children"
+> &
+  ViVisualProps & {
+    bordered?: boolean;
+    icon?: ViButtonIcon;
+    iconPosition?: ViButtonIconPosition;
+    label?: string;
+    loading?: boolean;
+    size?: ViButtonSize;
+    variant?: ViButtonVariant;
+  };
+
+const icons: Record<ViButtonIcon, Icon> = {
+  arrow: ArrowUpRight,
+  plus: Plus,
+  settings: GearSix,
+};
+
+export const ViButton = forwardRef<HTMLButtonElement, ViButtonProps>(
+  function ViButton(
+    {
+      activeColor,
+      activeTextColor,
+      "aria-label": ariaLabel,
+      bordered = true,
+      borderColor,
+      className = "",
+      disabled = false,
+      glass,
+      icon = "arrow",
+      iconPosition = "right",
+      label = "Explore work",
+      loading = false,
+      onPointerEnter,
+      radius = "pill",
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      size = "md",
+      standbyColor,
+      standbyTextColor,
+      type = "button",
+      variant = "active",
+      ...buttonProps
+    },
+    ref,
+  ) {
+    const visual = createViVisualConfig({
+      activeColor,
+      activeTextColor,
+      borderColor,
+      glass,
+      radius,
+      shineColorA,
+      shineColorB,
+      shinyBorder,
+      standbyColor,
+      standbyTextColor,
+    });
+    const IconComponent = icons[icon];
+    const iconOnly = iconPosition === "only";
+    const showIcon = iconPosition !== "none";
+    const buttonLabel = iconOnly ? ariaLabel ?? label : ariaLabel;
+
+    return (
+      <ViComponentSurface
+        className={`vi-button-shell ${bordered ? "" : "vi-button-shell--borderless"}`.trim()}
+        config={visual}
+      >
+        <button
+          {...buttonProps}
+          ref={ref}
+          className={`vi-button ${className}`.trim()}
+          type={type}
+          aria-busy={loading || undefined}
+          aria-label={buttonLabel}
+          data-icon={icon}
+          data-icon-only={iconOnly}
+          data-loading={loading}
+          data-size={size}
+          data-variant={variant}
+          data-vi-hover
+          onPointerEnter={(event) => {
+            setViHoverOrigin(event);
+            onPointerEnter?.(event);
+          }}
+          disabled={disabled || loading}
+        >
+          {loading ? <span className="vi-button__spinner" aria-hidden="true" /> : null}
+          {!loading && showIcon && iconPosition === "left" ? (
+            <IconComponent className="vi-button__icon" aria-hidden="true" />
+          ) : null}
+          {!iconOnly ? <span className="vi-button__label">{label}</span> : null}
+          {!loading && showIcon && (iconPosition === "right" || iconOnly) ? (
+            <IconComponent className="vi-button__icon" aria-hidden="true" />
+          ) : null}
+        </button>
+      </ViComponentSurface>
+    );
+  },
+);
+
+// vi-component-config.ts
+import type { CSSProperties } from "react";
+
+export const VI_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "pill"] as const;
+
+export type ViRadius = (typeof VI_RADIUS_OPTIONS)[number];
+
+export type ViVisualConfig = {
+  shinyBorder: boolean;
+  glass: boolean;
+  radius: ViRadius;
+  activeColor: string;
+  standbyColor: string;
+  activeTextColor: string;
+  standbyTextColor: string;
+  borderColor: string;
+  shineColorA: string;
+  shineColorB: string;
+};
+
+export type ViVisualProps = Partial<ViVisualConfig>;
+
+export const DEFAULT_VI_VISUAL_CONFIG: ViVisualConfig = {
+  shinyBorder: false,
+  glass: false,
+  radius: "md",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+};
+
+export const GLASS_VI_VISUAL_CONFIG = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+} as const;
+
+export const VI_RADIUS_VALUES: Record<ViRadius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+export type ViVisualStyle = CSSProperties & {
+  "--vi-active": string;
+  "--vi-standby": string;
+  "--vi-active-text": string;
+  "--vi-standby-text": string;
+  "--vi-border": string;
+  "--vi-shine-a": string;
+  "--vi-shine-b": string;
+  "--vi-radius": string;
+  "--color-bg": string;
+  "--color-surface": string;
+  "--color-surface-raised": string;
+  "--color-text": string;
+  "--color-text-muted": string;
+  "--color-quiet-ink": string;
+  "--color-line": string;
+  "--color-clear-lime": string;
+  "--color-accent": string;
+  "--color-accent-soft": string;
+};
+
+export function createViVisualConfig(
+  overrides: ViVisualProps = {},
+): ViVisualConfig {
+  const definedOverrides = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value !== undefined),
+  ) as ViVisualProps;
+
+  return { ...DEFAULT_VI_VISUAL_CONFIG, ...definedOverrides };
+}
+
+export function resolveViPalette(config: ViVisualConfig) {
+  return config.glass ? GLASS_VI_VISUAL_CONFIG : config;
+}
+
+export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
+  const palette = resolveViPalette(config);
+
+  return {
+    "--vi-active": palette.activeColor,
+    "--vi-standby": palette.standbyColor,
+    "--vi-active-text": palette.activeTextColor,
+    "--vi-standby-text": palette.standbyTextColor,
+    "--vi-border": palette.borderColor,
+    "--vi-shine-a": palette.shineColorA,
+    "--vi-shine-b": palette.shineColorB,
+    "--vi-radius": VI_RADIUS_VALUES[config.radius],
+    "--color-bg": palette.standbyColor,
+    "--color-surface": palette.standbyColor,
+    "--color-surface-raised": `color-mix(in srgb, ${palette.standbyColor} 88%, white)`,
+    "--color-text": palette.standbyTextColor,
+    "--color-text-muted": `color-mix(in srgb, ${palette.standbyTextColor} 68%, transparent)`,
+    "--color-quiet-ink": `color-mix(in srgb, ${palette.standbyTextColor} 46%, transparent)`,
+    "--color-line": palette.borderColor,
+    "--color-clear-lime": palette.activeColor,
+    "--color-accent": palette.activeColor,
+    "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
+  };
+}
+
+export function setViHoverOrigin({ currentTarget, clientX, clientY }: {
+  currentTarget: HTMLElement;
+  clientX: number;
+  clientY: number;
+}) {
+  const { left, top, width, height } = currentTarget.getBoundingClientRect();
+  const x = width ? Math.min(1, Math.max(0, (clientX - left) / width)) : 0.5;
+  const y = height ? Math.min(1, Math.max(0, (clientY - top) / height)) : 0.5;
+
+  currentTarget.style.setProperty("--vi-hover-x", (x * 100) + "%");
+  currentTarget.style.setProperty("--vi-hover-y", (y * 100) + "%");
+}
+
+// vi-component-surface.tsx
+"use client";
+
+import type {
+  CSSProperties,
+  ElementType,
+  PointerEvent,
+  PointerEventHandler,
+  ReactNode,
+} from "react";
+
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  type ViVisualConfig,
+  type ViVisualProps,
+} from "./vi-component-config";
+
+type ViSurfaceStyle = CSSProperties & {
+  "--vi-glow-x": string;
+  "--vi-glow-y": string;
+};
+
+type ViComponentSurfaceProps = {
+  as?: ElementType;
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
+  config?: ViVisualConfig;
+  visualProps?: ViVisualProps;
+  hoverGlow?: boolean;
+  hoverGlowStrength?: "soft" | "medium" | "strong";
+  onPointerDown?: PointerEventHandler<HTMLElement>;
+};
+
+export function ViComponentSurface({
+  as: Component = "div",
+  children,
+  className = "",
+  contentClassName = "",
+  config,
+  visualProps,
+  hoverGlow = false,
+  hoverGlowStrength = "medium",
+  onPointerDown,
+}: ViComponentSurfaceProps) {
+  const resolvedConfig = config ?? createViVisualConfig(visualProps);
+
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+
+    event.currentTarget.style.setProperty("--vi-glow-x", `${x.toFixed(2)}%`);
+    event.currentTarget.style.setProperty("--vi-glow-y", `${y.toFixed(2)}%`);
+  }
+
+  const style: ViSurfaceStyle = {
+    ...createViVisualStyle(resolvedConfig),
+    "--vi-glow-x": "50%",
+    "--vi-glow-y": "50%",
+  };
+
+  return (
+    <Component
+      className={`vi-component-surface ${className}`.trim()}
+      data-glass={resolvedConfig.glass}
+      data-hover-glow={hoverGlow}
+      data-hover-glow-strength={hoverGlowStrength}
+      data-shiny={resolvedConfig.shinyBorder}
+      onPointerDown={onPointerDown}
+      onPointerMove={hoverGlow ? handlePointerMove : undefined}
+      style={style}
+    >
+      <span className="vi-component-surface__shine" aria-hidden="true" />
+      <span className="vi-component-surface__hover-glow" aria-hidden="true" />
+      <div className={`vi-component-surface__content ${contentClassName}`.trim()}>
+        {children}
+      </div>
+    </Component>
+  );
+}
+
+// vi-button.css
+.vi-component-surface {
+  --vi-font-body: ui-sans-serif, system-ui, sans-serif;
+  --vi-control-height-sm: 2rem;
+  --vi-control-height-md: 2.75rem;
+  --vi-control-height-lg: 3.25rem;
+  --vi-border-width: 1px;
+  --vi-focus-width: 2px;
+  --vi-radius-pill: 999px;
+  --vi-motion-duration-fast: 120ms;
+  --vi-motion-duration-standard: 220ms;
+  --vi-motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --vi-surface-border-width: 1px;
+  --vi-surface-shine-duration: 2800ms;
+  --vi-surface-shine-ease: cubic-bezier(0.45, 0, 0.2, 1);
+  --vi-surface-glass-blur: 18px;
+  --vi-surface-glass-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.16);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.vi-component-surface {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: var(--vi-surface-border-width) solid var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+  color: var(--vi-standby-text);
+}
+
+@property --vi-hover-progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@media (hover: hover) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    background-image: radial-gradient(
+      circle farthest-corner at var(--vi-hover-x, 50%) var(--vi-hover-y, 50%),
+      var(--vi-hover-fill, color-mix(in srgb, var(--vi-active) 16%, transparent)) var(--vi-hover-progress, 100%),
+      transparent calc(var(--vi-hover-progress, 100%) + 14%)
+    );
+    animation: vi-hover-fill 340ms var(--vi-motion-ease-out, ease-out) both;
+  }
+}
+
+@keyframes vi-hover-fill {
+  from { --vi-hover-progress: -14%; }
+  to { --vi-hover-progress: 100%; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    animation: none;
+  }
+}
+
+.vi-component-surface.pong-game {
+  border-color: var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+}
+
+.vi-component-surface__shine,
+.vi-component-surface__hover-glow {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vi-component-surface__shine {
+  background: linear-gradient(
+    112deg,
+    transparent 12%,
+    transparent 33%,
+    var(--vi-shine-b) 44%,
+    var(--vi-shine-a) 50%,
+    var(--vi-shine-b) 56%,
+    transparent 67%,
+    transparent 88%
+  ) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+  opacity: 0.92;
+  animation: vi-component-shine var(--vi-surface-shine-duration) var(--vi-surface-shine-ease) infinite;
+}
+
+.vi-component-surface__hover-glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms var(--ease-out);
+}
+
+.vi-component-surface__hover-glow::before,
+.vi-component-surface__hover-glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vi-component-surface__hover-glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(
+      circle at var(--vi-glow-x) var(--vi-glow-y),
+      var(--vi-active) 0,
+      color-mix(in srgb, var(--vi-active) 72%, transparent) 7%,
+      color-mix(in srgb, var(--vi-active) 20%, transparent) 18%,
+      transparent 42%
+    ) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface__hover-glow::after {
+  z-index: 1;
+  background: radial-gradient(
+    circle at var(--vi-glow-x) var(--vi-glow-y),
+    color-mix(in srgb, var(--vi-active) 10%, transparent),
+    transparent 48%
+  );
+}
+
+.vi-component-surface[data-hover-glow="true"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.72;
+}
+
+.vi-component-surface[data-hover-glow-strength="soft"] .vi-component-surface__hover-glow {
+  opacity: 0;
+  filter: saturate(0.75);
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.42;
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 1;
+}
+
+.vi-component-surface[data-glass="true"] {
+  border-color: var(--vi-border);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    var(--vi-standby);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    var(--vi-surface-glass-shadow);
+  -webkit-backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+  backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+}
+
+.vi-component-surface__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@keyframes vi-component-shine {
+  0%,
+  18% {
+    background-position: 145% center;
+  }
+  72%,
+  100% {
+    background-position: -45% center;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vi-component-surface[data-glass="true"] {
+    background: #161b16;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+.vi-button-shell {
+  --vi-button-height: var(--vi-control-height-md, 2.75rem);
+  --vi-button-padding-inline: var(--vi-ref-space-4, 1rem);
+  --vi-button-gap: var(--vi-ref-space-2, 0.5rem);
+  --vi-button-font-size: var(--vi-ref-font-size-sm, 0.72rem);
+  --vi-button-font-weight: 700;
+  --vi-button-letter-spacing: 0.02em;
+  --vi-button-icon-size: var(--vi-ref-control-icon-md, 1rem);
+  --vi-button-active-fill: var(--vi-active);
+  --vi-button-active-fill-hover: color-mix(in srgb, var(--vi-active) 86%, white);
+  --vi-button-active-ink: var(--vi-active-text);
+  --vi-button-standby-fill: transparent;
+  --vi-button-standby-fill-hover: color-mix(in srgb, var(--vi-active) 11%, transparent);
+  --vi-button-standby-ink: var(--vi-standby-text);
+  --vi-button-standby-ink-hover: var(--vi-active);
+  --vi-button-focus-color: var(--vi-active);
+  --vi-button-disabled-opacity: 0.42;
+  display: inline-block;
+  width: fit-content;
+}
+
+.vi-button-shell--borderless {
+  border-color: transparent;
+}
+
+.vi-button-shell .vi-component-surface__content {
+  height: 100%;
+}
+
+.vi-button {
+  --vi-hover-fill: var(--vi-button-active-fill-hover);
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  height: var(--vi-button-height);
+  align-items: center;
+  justify-content: center;
+  gap: var(--vi-button-gap);
+  padding: 0 var(--vi-button-padding-inline);
+  border: 0;
+  border-radius: max(0px, calc(var(--vi-radius) - var(--vi-surface-border-width, 1px)));
+  background: var(--vi-button-active-fill);
+  color: var(--vi-button-active-ink);
+  font-family: var(--vi-font-body, ui-sans-serif, system-ui, sans-serif);
+  font-size: var(--vi-button-font-size);
+  font-weight: var(--vi-button-font-weight);
+  letter-spacing: var(--vi-button-letter-spacing);
+  line-height: var(--vi-ref-line-height-control, 1.2);
+  transition:
+    background-color var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-out, ease-out),
+    color var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-out, ease-out),
+    opacity var(--vi-motion-duration-fast, 120ms) var(--vi-motion-ease-out, ease-out),
+    transform var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-out, ease-out);
+}
+
+.vi-button[data-size="sm"] {
+  --vi-button-height: var(--vi-control-height-sm, 2rem);
+  --vi-button-padding-inline: var(--vi-ref-space-3, 0.75rem);
+  --vi-button-font-size: var(--vi-ref-font-size-xs, 0.62rem);
+  --vi-button-icon-size: var(--vi-ref-control-icon-sm, 0.875rem);
+}
+
+.vi-button[data-size="lg"] {
+  --vi-button-height: var(--vi-control-height-lg, 3.25rem);
+  --vi-button-padding-inline: var(--vi-ref-space-5, 1.25rem);
+  --vi-button-font-size: var(--vi-ref-font-size-md, 0.82rem);
+  --vi-button-icon-size: var(--vi-ref-control-icon-lg, 1.25rem);
+}
+
+.vi-button[data-variant="standby"] {
+  --vi-hover-fill: var(--vi-button-standby-fill-hover);
+  background: var(--vi-button-standby-fill);
+  color: var(--vi-button-standby-ink);
+}
+
+.vi-button[data-icon-only="true"] {
+  width: var(--vi-button-height);
+  padding: 0;
+}
+
+.vi-button__icon {
+  transition: transform var(--vi-motion-duration-standard, 220ms) var(--vi-motion-ease-out, ease-out);
+  width: var(--vi-button-icon-size);
+  height: var(--vi-button-icon-size);
+  flex: 0 0 auto;
+}
+
+.vi-button__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vi-button__spinner {
+  width: var(--vi-button-icon-size);
+  height: var(--vi-button-icon-size);
+  flex: 0 0 auto;
+  border: var(--vi-border-width, 1px) solid color-mix(in srgb, currentColor 32%, transparent);
+  border-top-color: currentColor;
+  border-radius: var(--vi-radius-pill, 999px);
+  animation: vi-button-spin 680ms linear infinite;
+}
+
+.vi-button[data-variant="standby"]:hover:not(:disabled) {
+  color: var(--vi-button-standby-ink-hover);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .vi-button:hover:not(:disabled) .vi-button__icon {
+    transform: scale(1.14);
+  }
+
+  .vi-button[data-icon="arrow"]:hover:not(:disabled) .vi-button__icon {
+    transform: translate(3px, -3px);
+  }
+
+  .vi-button[data-icon="settings"]:hover:not(:disabled) .vi-button__icon {
+    transform: rotate(35deg);
+  }
+}
+
+.vi-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--vi-motion-duration-fast, 120ms);
+}
+
+.vi-button:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 var(--vi-focus-width, 2px) var(--vi-button-focus-color);
+}
+
+.vi-button:disabled {
+  cursor: not-allowed;
+  opacity: var(--vi-button-disabled-opacity);
+}
+
+@keyframes vi-button-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-button {
+    transition-duration: 0.01ms;
+  }
+
+  .vi-button:active:not(:disabled) {
+    transform: none;
+  }
+
+  .vi-button__spinner {
+    animation-duration: 1400ms;
+  }
+}

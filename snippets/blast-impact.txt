@@ -1,0 +1,2596 @@
+// Complete portable Pong package
+// Dependencies: npm install motion @phosphor-icons/react
+// Create each file below, then render <Example />.
+
+// Example.tsx
+"use client";
+
+import { PongGame } from "./pong-game";
+
+export default function Example() {
+  return (
+    <PongGame
+      blast
+      blastBars={5}
+    shinyBorder={false}
+    glass={false}
+    radius={"none"}
+    activeColor={"#c3f36b"}
+    standbyColor={"#071007"}
+    activeTextColor={"#010600"}
+    standbyTextColor={"#f3f8f0"}
+    borderColor={"#233a24"}
+    shineColorA={"#f6ffe2"}
+    shineColorB={"#c3f36b"}
+    />
+  );
+}
+
+// pong-game.tsx
+"use client";
+
+import {
+  ArrowCounterClockwise,
+  CaretDown,
+  CaretUp,
+  GearSix,
+  X,
+} from "@phosphor-icons/react";
+import { useReducedMotion } from "motion/react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+} from "react";
+
+import {
+  DEFAULT_VI_VISUAL_CONFIG,
+  createViVisualConfig,
+  type ViVisualProps,
+} from "../vicomponents/core/visual-props";
+import { ViComponentSurface } from "../vicomponents/core/vi-component-surface";
+
+import {
+  BLAST_BAR_OPTIONS,
+  clamp,
+  createPongState,
+  DEFAULT_BLAST_BARS,
+  movePongPlayerTarget,
+  PONG_MOBILE_CONTROL_NUDGE,
+  PONG_MOBILE_CONTROL_SPEED,
+  PONG_PADDLE_HEIGHT,
+  PONG_PADDLE_WIDTH,
+  stepPong,
+  type PongControlDirection,
+  type PongDifficulty,
+  type PongState,
+  type PongStepEvent,
+  type BlastBars,
+} from "./pong-physics";
+import { ShinyText } from "./shiny-text";
+
+type PongSettings = {
+  difficulty: PongDifficulty;
+  trail: boolean;
+  screenShake: boolean;
+  impactFlash: boolean;
+};
+
+type Score = {
+  player: number;
+  cpu: number;
+};
+
+const defaultSettings: PongSettings = {
+  difficulty: "focused",
+  trail: true,
+  screenShake: true,
+  impactFlash: true,
+};
+
+const difficultyOptions: Array<{ id: PongDifficulty; label: string; description: string }> = [
+  { id: "rookie", label: "Rookie", description: "A slower read" },
+  { id: "focused", label: "Focused", description: "A fair return" },
+  { id: "sharp", label: "Sharp", description: "A quicker rival" },
+];
+
+const difficultyLabels: Record<PongDifficulty, string> = {
+  rookie: "Rookie",
+  focused: "Focused",
+  sharp: "Sharp",
+};
+
+type PongColors = {
+  background: string;
+  surface: string;
+  accent: string;
+  text: string;
+  line: string;
+};
+
+type TrailPoint = {
+  x: number;
+  y: number;
+};
+
+function getPongColors(element: HTMLElement): PongColors {
+  const styles = getComputedStyle(element);
+
+  return {
+    background: styles.getPropertyValue("--color-bg").trim() || "#010600",
+    surface: styles.getPropertyValue("--color-surface-raised").trim() || "#0d170d",
+    accent: styles.getPropertyValue("--color-clear-lime").trim() || "#c3f36b",
+    text: styles.getPropertyValue("--color-text").trim() || "#f3f8f0",
+    line: styles.getPropertyValue("--color-line").trim() || "#233a24",
+  };
+}
+
+function drawRoundedRect(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number,
+) {
+  context.beginPath();
+  if (typeof context.roundRect === "function") {
+    context.roundRect(x, y, width, height, radius);
+  } else {
+    context.moveTo(x + radius, y);
+    context.arcTo(x + width, y, x + width, y + height, radius);
+    context.arcTo(x + width, y + height, x, y + height, radius);
+    context.arcTo(x, y + height, x, y, radius);
+    context.arcTo(x, y, x + width, y, radius);
+  }
+  context.fill();
+}
+
+function drawPaddleFlame(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  colors: PongColors,
+  time: number,
+  animate: boolean,
+) {
+  const flicker = animate ? Math.sin(time / 78) * 1.6 : 0;
+  const tip = 16 + flicker;
+
+  context.save();
+  context.fillStyle = colors.accent;
+  context.shadowColor = colors.accent;
+  context.shadowBlur = 18;
+  context.beginPath();
+  context.moveTo(x - 1, y - PONG_PADDLE_HEIGHT / 2 + 4);
+  context.quadraticCurveTo(x - 6, y - 13, x - tip, y - 11);
+  context.quadraticCurveTo(x - tip + 4, y - 4, x - tip - 1, y);
+  context.quadraticCurveTo(x - tip + 4, y + 4, x - tip, y + 11);
+  context.quadraticCurveTo(x - 6, y + 13, x - 1, y + PONG_PADDLE_HEIGHT / 2 - 4);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = colors.text;
+  context.globalAlpha = 0.82;
+  context.shadowBlur = 8;
+  context.beginPath();
+  context.moveTo(x - 2, y - 14);
+  context.quadraticCurveTo(x - 6, y - 7, x - 10, y);
+  context.quadraticCurveTo(x - 6, y + 7, x - 2, y + 14);
+  context.closePath();
+  context.fill();
+  context.restore();
+}
+
+function drawPong(
+  context: CanvasRenderingContext2D,
+  state: PongState,
+  width: number,
+  height: number,
+  trail: TrailPoint[],
+  showTrail: boolean,
+  flashSide: "player" | "cpu" | null,
+  colors: PongColors,
+  blastEnabled: boolean,
+  blastArmed: boolean,
+  time: number,
+  animateFlame: boolean,
+) {
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = colors.background;
+  context.fillRect(0, 0, width, height);
+
+  context.strokeStyle = colors.line;
+  context.lineWidth = 1;
+  context.setLineDash([2, 8]);
+  context.beginPath();
+  context.moveTo(width / 2, 18);
+  context.lineTo(width / 2, height - 18);
+  context.stroke();
+  context.setLineDash([]);
+
+  if (showTrail) {
+    trail.forEach((point, index) => {
+      const opacity = ((index + 1) / trail.length) * 0.32;
+      context.globalAlpha = opacity;
+      context.fillStyle = colors.accent;
+      context.beginPath();
+      context.arc(point.x, point.y, 2 + (index / trail.length) * 1.5, 0, Math.PI * 2);
+      context.fill();
+    });
+    context.globalAlpha = 1;
+  }
+
+  const playerX = 18;
+  const cpuX = width - 18;
+  const playerFlash = flashSide === "player";
+  const cpuFlash = flashSide === "cpu";
+
+  for (const paddle of [
+    { x: playerX, y: state.playerY, flash: playerFlash },
+    { x: cpuX, y: state.cpuY, flash: cpuFlash },
+  ]) {
+    if (paddle.x === playerX && blastEnabled && blastArmed) {
+      drawPaddleFlame(context, paddle.x, paddle.y, colors, time, animateFlame);
+    }
+
+    context.save();
+    context.fillStyle = paddle.flash ? colors.text : colors.accent;
+    context.shadowColor = colors.accent;
+    context.shadowBlur = paddle.flash ? 14 : 0;
+    drawRoundedRect(
+      context,
+      paddle.x - PONG_PADDLE_WIDTH / 2,
+      paddle.y - PONG_PADDLE_HEIGHT / 2,
+      PONG_PADDLE_WIDTH,
+      PONG_PADDLE_HEIGHT,
+      3,
+    );
+    context.restore();
+  }
+
+  context.save();
+  context.fillStyle = colors.accent;
+  context.shadowColor = colors.accent;
+  context.shadowBlur = 12;
+  context.beginPath();
+  context.arc(state.ball.x, state.ball.y, state.ball.radius, 0, Math.PI * 2);
+  context.fill();
+  context.restore();
+
+  context.fillStyle = colors.surface;
+  context.globalAlpha = 0.7;
+  context.fillRect(12, height - 12, width - 24, 1);
+  context.globalAlpha = 1;
+}
+
+function SettingsToggle({
+  label,
+  description,
+  checked,
+  onToggle,
+}: {
+  label: string;
+  description: string;
+  checked: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div
+      className="pong-game__toggle"
+      role="switch"
+      aria-checked={checked}
+      data-checked={checked}
+      tabIndex={0}
+      onClick={onToggle}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onToggle();
+        }
+      }}
+    >
+      <span className="pong-game__toggle-copy">
+        <strong>{label}</strong>
+        <small>{description}</small>
+      </span>
+      <span className="pong-game__toggle-control">
+        <input
+          className="pong-game__toggle-input"
+          type="checkbox"
+          checked={checked}
+          onChange={onToggle}
+          aria-hidden="true"
+          tabIndex={-1}
+          onClick={(event) => event.stopPropagation()}
+        />
+        <span className="pong-game__toggle-track" aria-hidden="true">
+          <span className="pong-game__toggle-thumb" />
+        </span>
+      </span>
+    </div>
+  );
+}
+
+export type PongGameProps = ViVisualProps & {
+  blast?: boolean;
+  blastBars?: BlastBars;
+  className?: string;
+  onBlastBarsChange?: (value: BlastBars) => void;
+};
+
+export function PongGame({
+  blast = false,
+  blastBars = DEFAULT_BLAST_BARS,
+  className = "",
+  onBlastBarsChange,
+  shinyBorder = DEFAULT_VI_VISUAL_CONFIG.shinyBorder,
+  glass = DEFAULT_VI_VISUAL_CONFIG.glass,
+  radius = "none",
+  activeColor = DEFAULT_VI_VISUAL_CONFIG.activeColor,
+  standbyColor = DEFAULT_VI_VISUAL_CONFIG.standbyColor,
+  activeTextColor = DEFAULT_VI_VISUAL_CONFIG.activeTextColor,
+  standbyTextColor = DEFAULT_VI_VISUAL_CONFIG.standbyTextColor,
+  borderColor = DEFAULT_VI_VISUAL_CONFIG.borderColor,
+  shineColorA = DEFAULT_VI_VISUAL_CONFIG.shineColorA,
+  shineColorB = DEFAULT_VI_VISUAL_CONFIG.shineColorB,
+}: PongGameProps) {
+  const stageRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<PongState | null>(null);
+  const dimensionsRef = useRef({ width: 360, height: 190, dpr: 1 });
+  const playerTargetYRef = useRef(95);
+  const settingsRef = useRef<PongSettings>(defaultSettings);
+  const reducedMotionRef = useRef(false);
+  const activeRef = useRef(false);
+  const blastEnabledRef = useRef(blast);
+  const blastBarsRef = useRef<BlastBars>(blastBars);
+  const blastArmedRef = useRef(false);
+  const blastChargeRef = useRef(0);
+  const trailRef = useRef<TrailPoint[]>([]);
+  const mobileControlDirectionRef = useRef<PongControlDirection | null>(null);
+  const impactFlashRef = useRef<{ side: "player" | "cpu" | null; until: number }>({
+    side: null,
+    until: 0,
+  });
+  const shakeTimerRef = useRef<number | null>(null);
+  const [settings, setSettings] = useState(defaultSettings);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [score, setScore] = useState<Score>({ player: 0, cpu: 0 });
+  const [isEngaged, setIsEngaged] = useState(false);
+  const [internalBlastBars, setInternalBlastBars] = useState<BlastBars>(blastBars);
+  const [blastCharge, setBlastCharge] = useState(0);
+  const [blastArmed, setBlastArmed] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const selectedBlastBars = onBlastBarsChange ? blastBars : internalBlastBars;
+  const visualConfig = createViVisualConfig({
+    shinyBorder,
+    glass,
+    radius,
+    activeColor,
+    standbyColor,
+    activeTextColor,
+    standbyTextColor,
+    borderColor,
+    shineColorA,
+    shineColorB,
+  });
+
+  const blastReady = blast && blastCharge >= selectedBlastBars && !blastArmed;
+
+  useEffect(() => {
+    settingsRef.current = settings;
+    if (!settings.trail) {
+      trailRef.current = [];
+    }
+  }, [settings]);
+
+  useEffect(() => {
+    reducedMotionRef.current = reducedMotion ?? false;
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    blastEnabledRef.current = blast;
+
+    if (!blast) {
+      blastArmedRef.current = false;
+      blastChargeRef.current = 0;
+      if (engineRef.current) {
+        engineRef.current.blastCharge = 0;
+      }
+    }
+  }, [blast]);
+
+  useEffect(() => {
+    blastBarsRef.current = selectedBlastBars;
+    const nextCharge = Math.min(blastChargeRef.current, selectedBlastBars);
+    blastChargeRef.current = nextCharge;
+
+    if (engineRef.current) {
+      engineRef.current.blastCharge = nextCharge;
+    }
+
+    setBlastCharge(nextCharge);
+  }, [selectedBlastBars]);
+
+  useEffect(() => {
+    const canvasElement = canvasRef.current;
+    const stageElement = stageRef.current;
+    if (!canvasElement || !stageElement) {
+      return;
+    }
+
+    const canvasNode = canvasElement;
+    const stageNode = stageElement;
+    const context = canvasNode.getContext("2d");
+    if (!context) {
+      return;
+    }
+    const drawingContext = context;
+
+    const colors = getPongColors(stageNode);
+    let animationFrame = 0;
+    let previousTime = performance.now();
+
+    function resizeCanvas() {
+      const rect = stageNode.getBoundingClientRect();
+      const width = Math.max(280, rect.width);
+      const height = Math.max(170, rect.height);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      dimensionsRef.current = { width, height, dpr };
+      canvasNode.width = Math.round(width * dpr);
+      canvasNode.height = Math.round(height * dpr);
+      drawingContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      if (!engineRef.current) {
+        engineRef.current = createPongState(width, height);
+        playerTargetYRef.current = height / 2;
+      } else {
+        engineRef.current.playerY = clamp(
+          engineRef.current.playerY,
+          PONG_PADDLE_HEIGHT / 2,
+          height - PONG_PADDLE_HEIGHT / 2,
+        );
+        engineRef.current.cpuY = clamp(
+          engineRef.current.cpuY,
+          PONG_PADDLE_HEIGHT / 2,
+          height - PONG_PADDLE_HEIGHT / 2,
+        );
+      }
+    }
+
+    function triggerFeedback(event: PongStepEvent, time: number) {
+      const currentSettings = settingsRef.current;
+      if (currentSettings.impactFlash && (event.playerHit || event.cpuHit)) {
+        impactFlashRef.current = {
+          side: event.playerHit ? "player" : "cpu",
+          until: time + 100,
+        };
+      }
+
+      if (
+        currentSettings.screenShake &&
+        !reducedMotionRef.current &&
+        (event.point || event.highSpeedHit)
+      ) {
+        stageNode.classList.remove("pong-game__stage--shake");
+        void stageNode.offsetWidth;
+        stageNode.classList.add("pong-game__stage--shake");
+        if (shakeTimerRef.current !== null) {
+          window.clearTimeout(shakeTimerRef.current);
+        }
+        shakeTimerRef.current = window.setTimeout(() => {
+          stageNode.classList.remove("pong-game__stage--shake");
+          shakeTimerRef.current = null;
+        }, 280);
+      }
+    }
+
+    function render(time: number) {
+      const deltaSeconds = Math.min((time - previousTime) / 1000, 0.032);
+      previousTime = time;
+      const state = engineRef.current;
+
+      if (state) {
+        const currentSettings = settingsRef.current;
+        let event: PongStepEvent = {
+          playerHit: false,
+          cpuHit: false,
+          point: null,
+          highSpeedHit: false,
+          blastHit: false,
+          blastCharge: state.blastCharge,
+        };
+
+        if (activeRef.current) {
+          const mobileControlDirection = mobileControlDirectionRef.current;
+          if (mobileControlDirection !== null) {
+            playerTargetYRef.current = movePongPlayerTarget(
+              playerTargetYRef.current,
+              mobileControlDirection,
+              PONG_MOBILE_CONTROL_SPEED * deltaSeconds,
+              dimensionsRef.current.height,
+            );
+          }
+
+          event = stepPong(state, {
+            width: dimensionsRef.current.width,
+            height: dimensionsRef.current.height,
+            playerTargetY: playerTargetYRef.current,
+            difficulty: currentSettings.difficulty,
+            deltaSeconds,
+            blastEnabled: blastEnabledRef.current,
+            blastArmed: blastArmedRef.current,
+            blastBars: blastBarsRef.current,
+          });
+
+          if (event.playerHit) {
+            blastChargeRef.current = event.blastCharge;
+            setBlastCharge(event.blastCharge);
+
+            if (event.blastHit) {
+              blastArmedRef.current = false;
+              setBlastArmed(false);
+            }
+          }
+
+          if (event.point) {
+            setScore((current) => ({
+              player: current.player + (event.point === "player" ? 1 : 0),
+              cpu: current.cpu + (event.point === "cpu" ? 1 : 0),
+            }));
+            trailRef.current = [];
+          }
+
+          if (currentSettings.trail && !reducedMotionRef.current) {
+            trailRef.current = [
+              ...trailRef.current,
+              { x: state.ball.x, y: state.ball.y },
+            ].slice(-14);
+          }
+          triggerFeedback(event, time);
+        }
+
+        const flash = impactFlashRef.current;
+        drawPong(
+          drawingContext,
+          state,
+          dimensionsRef.current.width,
+          dimensionsRef.current.height,
+          trailRef.current,
+          currentSettings.trail && !reducedMotionRef.current,
+          flash.until > time ? flash.side : null,
+          colors,
+          blastEnabledRef.current,
+          blastArmedRef.current,
+          time,
+          !reducedMotionRef.current,
+        );
+      }
+
+      animationFrame = window.requestAnimationFrame(render);
+    }
+
+    const resizeObserver = new ResizeObserver(resizeCanvas);
+    resizeObserver.observe(stageNode);
+    resizeCanvas();
+    animationFrame = window.requestAnimationFrame(render);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame);
+      resizeObserver.disconnect();
+      mobileControlDirectionRef.current = null;
+      if (shakeTimerRef.current !== null) {
+        window.clearTimeout(shakeTimerRef.current);
+      }
+    };
+  }, []);
+
+  function setEngaged(nextValue: boolean) {
+    activeRef.current = nextValue;
+    setIsEngaged(nextValue);
+  }
+
+  function nudgePlayer(direction: PongControlDirection) {
+    playerTargetYRef.current = movePongPlayerTarget(
+      playerTargetYRef.current,
+      direction,
+      PONG_MOBILE_CONTROL_NUDGE,
+      dimensionsRef.current.height,
+    );
+    setEngaged(true);
+  }
+
+  function startMobileControl(
+    direction: PongControlDirection,
+    event: PointerEvent<HTMLButtonElement>,
+  ) {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    mobileControlDirectionRef.current = direction;
+    nudgePlayer(direction);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function stopMobileControl(event: PointerEvent<HTMLButtonElement>) {
+    mobileControlDirectionRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function handleMobileControlClick(
+    direction: PongControlDirection,
+    event: MouseEvent<HTMLButtonElement>,
+  ) {
+    if (event.detail === 0) {
+      nudgePlayer(direction);
+    }
+  }
+
+  function activateBlast() {
+    if (
+      !blastEnabledRef.current ||
+      blastChargeRef.current < blastBarsRef.current ||
+      blastArmedRef.current
+    ) {
+      return;
+    }
+
+    blastArmedRef.current = true;
+    setBlastArmed(true);
+    setEngaged(true);
+  }
+
+  function handleGamePointerDown(event: PointerEvent<HTMLElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest("button, a, input, select, textarea")) {
+      return;
+    }
+
+    setEngaged(true);
+    activateBlast();
+  }
+
+  function handleStagePointerMove(event: PointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    playerTargetYRef.current = clamp(event.clientY - rect.top, 0, rect.height);
+  }
+
+  function handleStageKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    const movement = event.shiftKey ? 36 : 18;
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      event.preventDefault();
+      playerTargetYRef.current += event.key === "ArrowUp" ? -movement : movement;
+      setEngaged(true);
+    }
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setEngaged(true);
+      activateBlast();
+    }
+    if (event.key === "Escape") {
+      setEngaged(false);
+    }
+  }
+
+  function resetGame() {
+    const { width, height } = dimensionsRef.current;
+    engineRef.current = createPongState(width, height);
+    playerTargetYRef.current = height / 2;
+    mobileControlDirectionRef.current = null;
+    trailRef.current = [];
+    impactFlashRef.current = { side: null, until: 0 };
+    blastArmedRef.current = false;
+    blastChargeRef.current = 0;
+    setBlastArmed(false);
+    setBlastCharge(0);
+    setScore({ player: 0, cpu: 0 });
+  }
+
+  function updateSetting<Key extends keyof PongSettings>(key: Key, value: PongSettings[Key]) {
+    setSettings((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateBlastBars(value: BlastBars) {
+    blastBarsRef.current = value;
+    if (!onBlastBarsChange) {
+      setInternalBlastBars(value);
+    }
+
+    const nextCharge = Math.min(blastChargeRef.current, value);
+    blastChargeRef.current = nextCharge;
+    if (engineRef.current) {
+      engineRef.current.blastCharge = nextCharge;
+    }
+    setBlastCharge(nextCharge);
+    onBlastBarsChange?.(value);
+  }
+
+  return (
+    <ViComponentSurface
+      as="section"
+      className={`pong-game ${blastArmed ? "pong-game--blast-armed" : ""} ${className}`.trim()}
+      config={visualConfig}
+      hoverGlow
+      onPointerDown={handleGamePointerDown}
+    >
+      <div className="pong-game__header">
+        <div className="pong-game__copy">
+          <span className="section-kicker">A playful systems test</span>
+          <h2>Wanna play?</h2>
+          <p>
+            Move the left paddle with your cursor. Each clean rebound raises the pace and makes the next decision matter.
+          </p>
+        </div>
+        <button
+          className="pong-game__settings-button"
+          type="button"
+          aria-label="Open Pong settings"
+          aria-expanded={settingsOpen}
+          aria-controls="pong-settings"
+          onClick={() => setSettingsOpen((current) => !current)}
+        >
+          <GearSix size={18} weight="bold" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="pong-game__scoreline" aria-label={`You ${score.player}, CPU ${score.cpu}`}>
+        <span>You <strong>{score.player}</strong></span>
+        <span className="pong-game__scoreline-rule" aria-hidden="true" />
+        <span>CPU <strong>{score.cpu}</strong></span>
+      </div>
+
+      {blast ? (
+        <div
+          className="pong-game__blast-meter"
+          aria-label={`Blast Impact charge: ${blastCharge} of ${selectedBlastBars}${blastReady ? ", charged" : ""}`}
+        >
+          <div className="pong-game__blast-meter-row">
+            <span className="pong-game__blast-label">Blast Impact</span>
+            <div
+              className="pong-game__blast-bars"
+              data-ready={blastReady}
+              data-bars={selectedBlastBars}
+              aria-hidden="true"
+            >
+              {Array.from({ length: selectedBlastBars }, (_, index) => (
+                <span
+                  className="pong-game__blast-bar"
+                  data-filled={index < blastCharge}
+                  key={index}
+                />
+              ))}
+            </div>
+            <span className="pong-game__blast-status" data-ready={blastReady}>
+              {blastReady ? "Charged" : `${blastCharge}/${selectedBlastBars}`}
+            </span>
+          </div>
+          <span className="pong-game__blast-instruction">
+            {blastReady ? "Click anywhere to activate" : `${selectedBlastBars} player impacts to charge`}
+          </span>
+        </div>
+      ) : null}
+
+      <div
+        ref={stageRef}
+        className="pong-game__stage"
+        tabIndex={0}
+        data-engaged={isEngaged}
+        data-blast-armed={blastArmed}
+        aria-label={`Pong game. Move the pointer, use the arrow keys, or use the touch controls below to control your paddle.${blast ? " Click or tap the field when Blast Impact is charged to arm it." : ""}`}
+        onPointerEnter={() => setEngaged(true)}
+        onPointerLeave={() => setEngaged(false)}
+        onPointerMove={handleStagePointerMove}
+        onFocus={() => setEngaged(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.matches(":hover")) {
+            setEngaged(false);
+          }
+        }}
+        onKeyDown={handleStageKeyDown}
+      >
+        <canvas ref={canvasRef} aria-hidden="true" />
+        <span className="pong-game__stage-label">Paddle / rebound</span>
+        <div className="pong-game__stage-prompt" data-visible={!isEngaged}>
+          <ShinyText className="pong-game__prompt-title">
+            {blastArmed ? "Blast armed" : "Ready to play"}
+          </ShinyText>
+          <span>{blastArmed ? "Hit the ball with your paddle" : "Use pointer, keys or touch controls"}</span>
+        </div>
+        <span className="pong-game__stage-status" aria-live="polite">
+          {isEngaged ? "Live round" : "Round paused"}
+        </span>
+      </div>
+
+      <div className="pong-game__mobile-controls" aria-label="Touch controls">
+        <div className="pong-game__mobile-controls-heading">
+          <span>Touch controls</span>
+          <small>Tap or hold</small>
+        </div>
+        <div className="pong-game__mobile-controls-actions">
+          <div className="pong-game__mobile-direction-controls" role="group" aria-label="Move your paddle">
+            <button
+              className="pong-game__mobile-control"
+              type="button"
+              aria-label="Move paddle up"
+              onPointerDown={(event) => startMobileControl(-1, event)}
+              onPointerUp={stopMobileControl}
+              onPointerCancel={stopMobileControl}
+              onLostPointerCapture={stopMobileControl}
+              onClick={(event) => handleMobileControlClick(-1, event)}
+            >
+              <CaretUp size={18} weight="bold" aria-hidden="true" />
+              <span>Up</span>
+            </button>
+            <button
+              className="pong-game__mobile-control"
+              type="button"
+              aria-label="Move paddle down"
+              onPointerDown={(event) => startMobileControl(1, event)}
+              onPointerUp={stopMobileControl}
+              onPointerCancel={stopMobileControl}
+              onLostPointerCapture={stopMobileControl}
+              onClick={(event) => handleMobileControlClick(1, event)}
+            >
+              <CaretDown size={18} weight="bold" aria-hidden="true" />
+              <span>Down</span>
+            </button>
+          </div>
+          {blast ? (
+            <button
+              className="pong-game__mobile-blast"
+              type="button"
+              disabled={!blastReady}
+              data-ready={blastReady}
+              aria-label={blastReady ? "Activate Blast Impact" : `Blast Impact: ${blastCharge} of ${selectedBlastBars} impacts`}
+              onClick={activateBlast}
+            >
+              <strong>Blast</strong>
+              <small>{blastReady ? "Ready" : `${blastCharge}/${selectedBlastBars}`}</small>
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="pong-game__footer">
+        <span className="pong-game__difficulty">CPU / {difficultyLabels[settings.difficulty]}</span>
+        <div className="pong-game__actions">
+          <button className="pong-game__play-button" type="button" onClick={() => setEngaged(true)}>
+            <ShinyText>Start round</ShinyText>
+          </button>
+          <button className="pong-game__reset-button" type="button" onClick={resetGame}>
+            <ArrowCounterClockwise size={14} aria-hidden="true" />
+            Reset
+          </button>
+        </div>
+      </div>
+
+      {settingsOpen ? (
+        <div className="pong-game__settings" id="pong-settings" role="dialog" aria-label="Pong settings">
+          <div className="pong-game__settings-heading">
+            <span>Game settings</span>
+            <button
+              className="pong-game__settings-close"
+              type="button"
+              aria-label="Close Pong settings"
+              onClick={() => setSettingsOpen(false)}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+          <fieldset className="pong-game__difficulty-group">
+            <legend>CPU difficulty</legend>
+            <div className="pong-game__difficulty-options" role="radiogroup" aria-label="CPU difficulty">
+              {difficultyOptions.map((option) => (
+                <button
+                  key={option.id}
+                  className="pong-game__difficulty-option"
+                  type="button"
+                  role="radio"
+                  aria-checked={settings.difficulty === option.id}
+                  data-active={settings.difficulty === option.id}
+                  onClick={() => updateSetting("difficulty", option.id)}
+                >
+                  <strong>{option.label}</strong>
+                  <small>{option.description}</small>
+                </button>
+              ))}
+            </div>
+          </fieldset>
+          {blast ? (
+            <fieldset className="pong-game__blast-setting-group">
+              <legend>Blast charge threshold</legend>
+              <div
+                className="pong-game__blast-options"
+                role="radiogroup"
+                aria-label="Blast charge threshold"
+              >
+                {BLAST_BAR_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    className="pong-game__blast-option"
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedBlastBars === option}
+                    data-active={selectedBlastBars === option}
+                    onClick={() => updateBlastBars(option)}
+                  >
+                    <strong>{option}</strong>
+                    <small>impacts</small>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ) : null}
+          <div className="pong-game__toggle-list">
+            <SettingsToggle
+              label="Ball trail"
+              description="Keep the last rebounds visible"
+              checked={settings.trail}
+              onToggle={() => updateSetting("trail", !settings.trail)}
+            />
+            <SettingsToggle
+              label="Screen shake"
+              description="A light tremor on points and fast hits"
+              checked={settings.screenShake}
+              onToggle={() => updateSetting("screenShake", !settings.screenShake)}
+            />
+            <SettingsToggle
+              label="Impact flash"
+              description="Pulse the paddle at collision"
+              checked={settings.impactFlash}
+              onToggle={() => updateSetting("impactFlash", !settings.impactFlash)}
+            />
+          </div>
+        </div>
+      ) : null}
+    </ViComponentSurface>
+  );
+}
+
+// pong-physics.ts
+export type PongDifficulty = "rookie" | "focused" | "sharp";
+
+export type PongPoint = "player" | "cpu";
+
+export type PongState = {
+  ball: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    radius: number;
+  };
+  playerY: number;
+  cpuY: number;
+  playerHits: number;
+  blastCharge: number;
+};
+
+export type PongStepConfig = {
+  width: number;
+  height: number;
+  playerTargetY: number;
+  difficulty: PongDifficulty;
+  deltaSeconds: number;
+  blastEnabled?: boolean;
+  blastArmed?: boolean;
+  blastBars?: BlastBars;
+};
+
+export type PongStepEvent = {
+  playerHit: boolean;
+  cpuHit: boolean;
+  point: PongPoint | null;
+  highSpeedHit: boolean;
+  blastHit: boolean;
+  blastCharge: number;
+};
+
+export const PONG_PADDLE_WIDTH = 7;
+export const PONG_PADDLE_HEIGHT = 44;
+export const PONG_MOBILE_CONTROL_SPEED = 260;
+export const PONG_MOBILE_CONTROL_NUDGE = 24;
+export type PongControlDirection = -1 | 1;
+export const BLAST_BAR_OPTIONS = [3, 5, 10] as const;
+export type BlastBars = (typeof BLAST_BAR_OPTIONS)[number];
+export const DEFAULT_BLAST_BARS: BlastBars = 5;
+export const BLAST_MAX_CHARGE = Math.max(...BLAST_BAR_OPTIONS);
+export const BLAST_BALL_SPEED = 860;
+
+const PLAYER_X = 18;
+const MAX_BALL_SPEED = 430;
+
+const difficultyConfig: Record<
+  PongDifficulty,
+  { cpuSpeed: number; prediction: number }
+> = {
+  rookie: { cpuSpeed: 92, prediction: 0.02 },
+  focused: { cpuSpeed: 142, prediction: 0.055 },
+  sharp: { cpuSpeed: 205, prediction: 0.09 },
+};
+
+export function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+export function movePongPlayerTarget(
+  targetY: number,
+  direction: PongControlDirection,
+  distance: number,
+  height: number,
+) {
+  const minY = PONG_PADDLE_HEIGHT / 2;
+  const maxY = Math.max(minY, height - PONG_PADDLE_HEIGHT / 2);
+
+  return clamp(targetY + direction * Math.max(0, distance), minY, maxY);
+}
+
+export function createPongState(width: number, height: number): PongState {
+  const state: PongState = {
+    ball: {
+      x: width / 2,
+      y: height / 2,
+      vx: 132,
+      vy: 38,
+      radius: 3.5,
+    },
+    playerY: height / 2,
+    cpuY: height / 2,
+    playerHits: 0,
+    blastCharge: 0,
+  };
+
+  return state;
+}
+
+export function resetBall(state: PongState, width: number, height: number, direction: -1 | 1) {
+  state.ball.x = width / 2;
+  state.ball.y = height / 2;
+  state.ball.vx = direction * 132;
+  state.ball.vy = direction * 38;
+  state.playerHits = 0;
+}
+
+function moveCpu(state: PongState, config: PongStepConfig, deltaSeconds: number) {
+  const { cpuSpeed, prediction } = difficultyConfig[config.difficulty];
+  const target = state.ball.y + state.ball.vy * prediction;
+  const distance = target - state.cpuY;
+  const maxMove = cpuSpeed * deltaSeconds;
+
+  state.cpuY += clamp(distance, -maxMove, maxMove);
+  state.cpuY = clamp(
+    state.cpuY,
+    PONG_PADDLE_HEIGHT / 2,
+    config.height - PONG_PADDLE_HEIGHT / 2,
+  );
+}
+
+function reflectFromPaddle(
+  state: PongState,
+  paddleY: number,
+  direction: -1 | 1,
+  blast = false,
+) {
+  const offset = clamp(
+    (state.ball.y - paddleY) / (PONG_PADDLE_HEIGHT / 2),
+    -1,
+    1,
+  );
+  const previousSpeed = Math.hypot(state.ball.vx, state.ball.vy);
+  const nextSpeed = blast ? BLAST_BALL_SPEED : Math.min(MAX_BALL_SPEED, previousSpeed * 1.045);
+  const verticalVelocity = state.ball.vy * 0.88 + offset * 118;
+  const angle = clamp(verticalVelocity / nextSpeed, -0.82, 0.82);
+
+  state.ball.vx = direction * Math.sqrt(Math.max(1, nextSpeed ** 2 - (nextSpeed * angle) ** 2));
+  state.ball.vy = nextSpeed * angle;
+  return nextSpeed;
+}
+
+function intersectsPaddle(state: PongState, paddleX: number, paddleY: number) {
+  return (
+    Math.abs(state.ball.x - paddleX) <= PONG_PADDLE_WIDTH / 2 + state.ball.radius &&
+    Math.abs(state.ball.y - paddleY) <= PONG_PADDLE_HEIGHT / 2 + state.ball.radius
+  );
+}
+
+export function stepPong(state: PongState, config: PongStepConfig): PongStepEvent {
+  const deltaSeconds = clamp(config.deltaSeconds, 0, 0.032);
+  const blastBars = config.blastBars ?? DEFAULT_BLAST_BARS;
+  const event: PongStepEvent = {
+    playerHit: false,
+    cpuHit: false,
+    point: null,
+    highSpeedHit: false,
+    blastHit: false,
+    blastCharge: state.blastCharge,
+  };
+
+  state.playerY += (config.playerTargetY - state.playerY) * Math.min(1, deltaSeconds * 18);
+  state.playerY = clamp(
+    state.playerY,
+    PONG_PADDLE_HEIGHT / 2,
+    config.height - PONG_PADDLE_HEIGHT / 2,
+  );
+  moveCpu(state, config, deltaSeconds);
+
+  state.ball.x += state.ball.vx * deltaSeconds;
+  state.ball.y += state.ball.vy * deltaSeconds;
+
+  if (state.ball.y - state.ball.radius <= 0) {
+    state.ball.y = state.ball.radius;
+    state.ball.vy = Math.abs(state.ball.vy);
+  } else if (state.ball.y + state.ball.radius >= config.height) {
+    state.ball.y = config.height - state.ball.radius;
+    state.ball.vy = -Math.abs(state.ball.vy);
+  }
+
+  const cpuX = config.width - PLAYER_X;
+  if (
+    state.ball.vx < 0 &&
+    state.ball.x - state.ball.radius <= PLAYER_X + PONG_PADDLE_WIDTH / 2 &&
+    intersectsPaddle(state, PLAYER_X, state.playerY)
+  ) {
+    state.ball.x = PLAYER_X + PONG_PADDLE_WIDTH / 2 + state.ball.radius;
+    const blastHit = Boolean(
+      config.blastEnabled &&
+      config.blastArmed &&
+      state.blastCharge >= blastBars,
+    );
+    const speed = reflectFromPaddle(state, state.playerY, 1, blastHit);
+    state.playerHits += 1;
+    event.playerHit = true;
+    event.blastHit = blastHit;
+    if (blastHit) {
+      state.blastCharge = 0;
+    } else if (config.blastEnabled) {
+      state.blastCharge = Math.min(blastBars, state.blastCharge + 1);
+    }
+    event.blastCharge = state.blastCharge;
+    event.highSpeedHit = speed >= 285;
+  } else if (
+    state.ball.vx > 0 &&
+    state.ball.x + state.ball.radius >= cpuX - PONG_PADDLE_WIDTH / 2 &&
+    intersectsPaddle(state, cpuX, state.cpuY)
+  ) {
+    state.ball.x = cpuX - PONG_PADDLE_WIDTH / 2 - state.ball.radius;
+    reflectFromPaddle(state, state.cpuY, -1);
+    event.cpuHit = true;
+  }
+
+  if (state.ball.x + state.ball.radius < 0) {
+    event.point = "cpu";
+    resetBall(state, config.width, config.height, -1);
+  } else if (state.ball.x - state.ball.radius > config.width) {
+    event.point = "player";
+    resetBall(state, config.width, config.height, 1);
+  }
+
+  return event;
+}
+
+// shiny-text.tsx
+"use client";
+
+import { motion, useAnimationFrame, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import type { ReactNode } from "react";
+import { useRef } from "react";
+
+type ShinyTextProps = {
+  children: ReactNode;
+  className?: string;
+  color?: string;
+  shineColor?: string;
+  speed?: number;
+};
+
+export function ShinyText({
+  children,
+  className = "",
+  color = "var(--color-quiet-ink)",
+  shineColor = "var(--color-clear-lime)",
+  speed = 2.8,
+}: ShinyTextProps) {
+  const reducedMotion = useReducedMotion();
+  const progress = useMotionValue(0);
+  const elapsedRef = useRef(0);
+  const lastTimeRef = useRef<number | null>(null);
+  const duration = speed * 1000;
+
+  useAnimationFrame((time) => {
+    if (reducedMotion) {
+      lastTimeRef.current = null;
+      progress.set(50);
+      return;
+    }
+
+    if (lastTimeRef.current === null) {
+      lastTimeRef.current = time;
+      return;
+    }
+
+    elapsedRef.current += time - lastTimeRef.current;
+    lastTimeRef.current = time;
+    progress.set((elapsedRef.current % duration) / duration);
+  });
+
+  const backgroundPosition = useTransform(progress, (value) => `${150 - value * 200}% center`);
+
+  return (
+    <motion.span
+      className={`shiny-text ${className}`.trim()}
+      style={{
+        backgroundImage: `linear-gradient(110deg, ${color} 0%, ${color} 36%, ${shineColor} 50%, ${color} 64%, ${color} 100%)`,
+        backgroundPosition: reducedMotion ? "50% center" : backgroundPosition,
+      }}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+// vi-component-config.ts
+import type { CSSProperties } from "react";
+
+export const VI_RADIUS_OPTIONS = ["none", "sm", "md", "lg", "pill"] as const;
+
+export type ViRadius = (typeof VI_RADIUS_OPTIONS)[number];
+
+export type ViVisualConfig = {
+  shinyBorder: boolean;
+  glass: boolean;
+  radius: ViRadius;
+  activeColor: string;
+  standbyColor: string;
+  activeTextColor: string;
+  standbyTextColor: string;
+  borderColor: string;
+  shineColorA: string;
+  shineColorB: string;
+};
+
+export type ViVisualProps = Partial<ViVisualConfig>;
+
+export const DEFAULT_VI_VISUAL_CONFIG: ViVisualConfig = {
+  shinyBorder: false,
+  glass: false,
+  radius: "md",
+  activeColor: "#c3f36b",
+  standbyColor: "#071007",
+  activeTextColor: "#010600",
+  standbyTextColor: "#f3f8f0",
+  borderColor: "#233a24",
+  shineColorA: "#f6ffe2",
+  shineColorB: "#c3f36b",
+};
+
+export const GLASS_VI_VISUAL_CONFIG = {
+  activeColor: "rgba(255, 255, 255, 0.18)",
+  standbyColor: "rgba(255, 255, 255, 0.055)",
+  activeTextColor: "#071007",
+  standbyTextColor: "#f7faf7",
+  borderColor: "rgba(255, 255, 255, 0.2)",
+  shineColorA: "rgba(255, 255, 255, 0.92)",
+  shineColorB: "rgba(255, 255, 255, 0.22)",
+} as const;
+
+export const VI_RADIUS_VALUES: Record<ViRadius, string> = {
+  none: "0px",
+  sm: "8px",
+  md: "16px",
+  lg: "28px",
+  pill: "999px",
+};
+
+export type ViVisualStyle = CSSProperties & {
+  "--vi-active": string;
+  "--vi-standby": string;
+  "--vi-active-text": string;
+  "--vi-standby-text": string;
+  "--vi-border": string;
+  "--vi-shine-a": string;
+  "--vi-shine-b": string;
+  "--vi-radius": string;
+  "--color-bg": string;
+  "--color-surface": string;
+  "--color-surface-raised": string;
+  "--color-text": string;
+  "--color-text-muted": string;
+  "--color-quiet-ink": string;
+  "--color-line": string;
+  "--color-clear-lime": string;
+  "--color-accent": string;
+  "--color-accent-soft": string;
+};
+
+export function createViVisualConfig(
+  overrides: ViVisualProps = {},
+): ViVisualConfig {
+  const definedOverrides = Object.fromEntries(
+    Object.entries(overrides).filter(([, value]) => value !== undefined),
+  ) as ViVisualProps;
+
+  return { ...DEFAULT_VI_VISUAL_CONFIG, ...definedOverrides };
+}
+
+export function resolveViPalette(config: ViVisualConfig) {
+  return config.glass ? GLASS_VI_VISUAL_CONFIG : config;
+}
+
+export function createViVisualStyle(config: ViVisualConfig): ViVisualStyle {
+  const palette = resolveViPalette(config);
+
+  return {
+    "--vi-active": palette.activeColor,
+    "--vi-standby": palette.standbyColor,
+    "--vi-active-text": palette.activeTextColor,
+    "--vi-standby-text": palette.standbyTextColor,
+    "--vi-border": palette.borderColor,
+    "--vi-shine-a": palette.shineColorA,
+    "--vi-shine-b": palette.shineColorB,
+    "--vi-radius": VI_RADIUS_VALUES[config.radius],
+    "--color-bg": palette.standbyColor,
+    "--color-surface": palette.standbyColor,
+    "--color-surface-raised": `color-mix(in srgb, ${palette.standbyColor} 88%, white)`,
+    "--color-text": palette.standbyTextColor,
+    "--color-text-muted": `color-mix(in srgb, ${palette.standbyTextColor} 68%, transparent)`,
+    "--color-quiet-ink": `color-mix(in srgb, ${palette.standbyTextColor} 46%, transparent)`,
+    "--color-line": palette.borderColor,
+    "--color-clear-lime": palette.activeColor,
+    "--color-accent": palette.activeColor,
+    "--color-accent-soft": `color-mix(in srgb, ${palette.activeColor} 11%, transparent)`,
+  };
+}
+
+export function setViHoverOrigin({ currentTarget, clientX, clientY }: {
+  currentTarget: HTMLElement;
+  clientX: number;
+  clientY: number;
+}) {
+  const { left, top, width, height } = currentTarget.getBoundingClientRect();
+  const x = width ? Math.min(1, Math.max(0, (clientX - left) / width)) : 0.5;
+  const y = height ? Math.min(1, Math.max(0, (clientY - top) / height)) : 0.5;
+
+  currentTarget.style.setProperty("--vi-hover-x", (x * 100) + "%");
+  currentTarget.style.setProperty("--vi-hover-y", (y * 100) + "%");
+}
+
+// vi-component-surface.tsx
+"use client";
+
+import type {
+  CSSProperties,
+  ElementType,
+  PointerEvent,
+  PointerEventHandler,
+  ReactNode,
+} from "react";
+
+import {
+  createViVisualConfig,
+  createViVisualStyle,
+  type ViVisualConfig,
+  type ViVisualProps,
+} from "./vi-component-config";
+
+type ViSurfaceStyle = CSSProperties & {
+  "--vi-glow-x": string;
+  "--vi-glow-y": string;
+};
+
+type ViComponentSurfaceProps = {
+  as?: ElementType;
+  children: ReactNode;
+  className?: string;
+  contentClassName?: string;
+  config?: ViVisualConfig;
+  visualProps?: ViVisualProps;
+  hoverGlow?: boolean;
+  hoverGlowStrength?: "soft" | "medium" | "strong";
+  onPointerDown?: PointerEventHandler<HTMLElement>;
+};
+
+export function ViComponentSurface({
+  as: Component = "div",
+  children,
+  className = "",
+  contentClassName = "",
+  config,
+  visualProps,
+  hoverGlow = false,
+  hoverGlowStrength = "medium",
+  onPointerDown,
+}: ViComponentSurfaceProps) {
+  const resolvedConfig = config ?? createViVisualConfig(visualProps);
+
+  function handlePointerMove(event: PointerEvent<HTMLElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = Math.min(100, Math.max(0, ((event.clientX - rect.left) / rect.width) * 100));
+    const y = Math.min(100, Math.max(0, ((event.clientY - rect.top) / rect.height) * 100));
+
+    event.currentTarget.style.setProperty("--vi-glow-x", `${x.toFixed(2)}%`);
+    event.currentTarget.style.setProperty("--vi-glow-y", `${y.toFixed(2)}%`);
+  }
+
+  const style: ViSurfaceStyle = {
+    ...createViVisualStyle(resolvedConfig),
+    "--vi-glow-x": "50%",
+    "--vi-glow-y": "50%",
+  };
+
+  return (
+    <Component
+      className={`vi-component-surface ${className}`.trim()}
+      data-glass={resolvedConfig.glass}
+      data-hover-glow={hoverGlow}
+      data-hover-glow-strength={hoverGlowStrength}
+      data-shiny={resolvedConfig.shinyBorder}
+      onPointerDown={onPointerDown}
+      onPointerMove={hoverGlow ? handlePointerMove : undefined}
+      style={style}
+    >
+      <span className="vi-component-surface__shine" aria-hidden="true" />
+      <span className="vi-component-surface__hover-glow" aria-hidden="true" />
+      <div className={`vi-component-surface__content ${contentClassName}`.trim()}>
+        {children}
+      </div>
+    </Component>
+  );
+}
+
+// pong-game.css
+.pong-game {
+  --font-code: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-display: Georgia, "Times New Roman", serif;
+  --duration-fast: 120ms;
+  --duration-standard: 220ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --vi-surface-border-width: 1px;
+  --vi-surface-shine-duration: 2800ms;
+  --vi-surface-shine-ease: cubic-bezier(0.45, 0, 0.2, 1);
+  --vi-surface-glass-blur: 18px;
+  --vi-surface-glass-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.16);
+  box-sizing: border-box;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.pong-game *,
+.pong-game *::before,
+.pong-game *::after {
+  box-sizing: border-box;
+}
+
+.pong-game button,
+.pong-game input {
+  color: inherit;
+  font: inherit;
+}
+
+.pong-game button {
+  cursor: pointer;
+}
+
+.pong-game .section-kicker {
+  color: var(--color-accent);
+  font-family: var(--font-code);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.vi-component-surface {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  overflow: hidden;
+  border: var(--vi-surface-border-width) solid var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+  color: var(--vi-standby-text);
+}
+
+@property --vi-hover-progress {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 100%;
+}
+
+@media (hover: hover) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    background-image: radial-gradient(
+      circle farthest-corner at var(--vi-hover-x, 50%) var(--vi-hover-y, 50%),
+      var(--vi-hover-fill, color-mix(in srgb, var(--vi-active) 16%, transparent)) var(--vi-hover-progress, 100%),
+      transparent calc(var(--vi-hover-progress, 100%) + 14%)
+    );
+    animation: vi-hover-fill 340ms var(--vi-motion-ease-out, ease-out) both;
+  }
+}
+
+@keyframes vi-hover-fill {
+  from { --vi-hover-progress: -14%; }
+  to { --vi-hover-progress: 100%; }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: reduce) {
+  [data-vi-hover]:hover:not([data-vi-suite-hover]):not(:disabled, .pill-demo__tab[aria-pressed="true"]),
+  [data-vi-hover]:hover:not([data-vi-suite-hover]) > .pill-demo__active {
+    animation: none;
+  }
+}
+
+.vi-component-surface.pong-game {
+  border-color: var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+}
+
+.vi-component-surface__shine,
+.vi-component-surface__hover-glow {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vi-component-surface__shine {
+  background: linear-gradient(
+    112deg,
+    transparent 12%,
+    transparent 33%,
+    var(--vi-shine-b) 44%,
+    var(--vi-shine-a) 50%,
+    var(--vi-shine-b) 56%,
+    transparent 67%,
+    transparent 88%
+  ) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+  opacity: 0.92;
+  animation: vi-component-shine var(--vi-surface-shine-duration) var(--vi-surface-shine-ease) infinite;
+}
+
+.vi-component-surface__hover-glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms var(--ease-out);
+}
+
+.vi-component-surface__hover-glow::before,
+.vi-component-surface__hover-glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vi-component-surface__hover-glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(
+      circle at var(--vi-glow-x) var(--vi-glow-y),
+      var(--vi-active) 0,
+      color-mix(in srgb, var(--vi-active) 72%, transparent) 7%,
+      color-mix(in srgb, var(--vi-active) 20%, transparent) 18%,
+      transparent 42%
+    ) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface__hover-glow::after {
+  z-index: 1;
+  background: radial-gradient(
+    circle at var(--vi-glow-x) var(--vi-glow-y),
+    color-mix(in srgb, var(--vi-active) 10%, transparent),
+    transparent 48%
+  );
+}
+
+.vi-component-surface[data-hover-glow="true"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.72;
+}
+
+.vi-component-surface[data-hover-glow-strength="soft"] .vi-component-surface__hover-glow {
+  opacity: 0;
+  filter: saturate(0.75);
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.42;
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 1;
+}
+
+.vi-component-surface[data-glass="true"] {
+  border-color: var(--vi-border);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    var(--vi-standby);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    var(--vi-surface-glass-shadow);
+  -webkit-backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+  backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+}
+
+.vi-component-surface__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@keyframes vi-component-shine {
+  0%,
+  18% {
+    background-position: 145% center;
+  }
+  72%,
+  100% {
+    background-position: -45% center;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vi-component-surface[data-glass="true"] {
+    background: #161b16;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+.pong-game {
+  border-color: var(--vi-border);
+  border-radius: var(--vi-radius);
+  background: var(--vi-standby);
+}
+
+.vi-component-surface__shine,
+.vi-component-surface__hover-glow {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: inherit;
+  opacity: 0;
+}
+
+.vi-component-surface__shine {
+  background: linear-gradient(
+    112deg,
+    transparent 12%,
+    transparent 33%,
+    var(--vi-shine-b) 44%,
+    var(--vi-shine-a) 50%,
+    var(--vi-shine-b) 56%,
+    transparent 67%,
+    transparent 88%
+  ) border-box;
+  background-position: 145% center;
+  background-size: 260% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+  opacity: 0.92;
+  animation: vi-component-shine var(--vi-surface-shine-duration) var(--vi-surface-shine-ease) infinite;
+}
+
+.vi-component-surface__hover-glow {
+  z-index: 0;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  transition: opacity 260ms var(--ease-out);
+}
+
+.vi-component-surface__hover-glow::before,
+.vi-component-surface__hover-glow::after {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  content: "";
+}
+
+.vi-component-surface__hover-glow::before {
+  z-index: 2;
+  inset: -1px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(
+      circle at var(--vi-glow-x) var(--vi-glow-y),
+      var(--vi-active) 0,
+      color-mix(in srgb, var(--vi-active) 72%, transparent) 7%,
+      color-mix(in srgb, var(--vi-active) 20%, transparent) 18%,
+      transparent 42%
+    ) border-box;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+.vi-component-surface__hover-glow::after {
+  z-index: 1;
+  background: radial-gradient(
+    circle at var(--vi-glow-x) var(--vi-glow-y),
+    color-mix(in srgb, var(--vi-active) 10%, transparent),
+    transparent 48%
+  );
+}
+
+.vi-component-surface[data-hover-glow="true"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.72;
+}
+
+.vi-component-surface[data-hover-glow-strength="soft"] .vi-component-surface__hover-glow {
+  opacity: 0;
+  filter: saturate(0.75);
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="soft"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 0.42;
+}
+
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:hover .vi-component-surface__hover-glow,
+.vi-component-surface[data-hover-glow="true"][data-hover-glow-strength="strong"]:focus-within .vi-component-surface__hover-glow {
+  opacity: 1;
+}
+
+.vi-component-surface[data-glass="true"] {
+  border-color: var(--vi-border);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.025)),
+    var(--vi-standby);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.035),
+    var(--vi-surface-glass-shadow);
+  -webkit-backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+  backdrop-filter: blur(var(--vi-surface-glass-blur)) saturate(125%);
+}
+
+.vi-component-surface__content {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+@keyframes vi-component-shine {
+  0%,
+  18% {
+    background-position: 145% center;
+  }
+  72%,
+  100% {
+    background-position: -45% center;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .vi-component-surface[data-glass="true"] {
+    background: #161b16;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-component-surface[data-shiny="true"] .vi-component-surface__shine {
+    animation: none;
+    background-position: 50% center;
+  }
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.75fr);
+  align-items: start;
+  gap: clamp(3rem, 9vw, 10rem);
+  margin-top: clamp(4rem, 8vw, 7rem);
+}
+
+.about-copy {
+  max-width: 38rem;
+}
+
+.about-copy p {
+  margin: 1.35rem 0 0;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.about-copy p:first-child {
+  margin-top: 0;
+}
+
+.about-copy__lead {
+  color: var(--color-text) !important;
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  letter-spacing: -0.025em;
+  line-height: 1.35 !important;
+}
+
+.pong-game {
+  position: relative;
+  padding: 1.25rem;
+  background: var(--color-surface);
+}
+
+.pong-game__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.pong-game__copy h2 {
+  max-width: 12ch;
+  margin: 1.1rem 0 0;
+  color: var(--color-accent);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.055em;
+  line-height: 1.1;
+}
+
+.pong-game__copy p {
+  max-width: 30rem;
+  margin: 1rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.pong-game__settings-button,
+.pong-game__settings-close {
+  display: inline-grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  background: transparent;
+  color: var(--color-quiet-ink);
+  transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.pong-game__settings-button:hover,
+.pong-game__settings-button:focus-visible,
+.pong-game__settings-close:hover,
+.pong-game__settings-close:focus-visible {
+  border-color: var(--color-clear-lime);
+  color: var(--color-clear-lime);
+  transform: translateY(-1px);
+}
+
+.pong-game__scoreline {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+  color: var(--color-quiet-ink);
+  font-family: var(--font-code);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pong-game__scoreline strong {
+  color: var(--color-text);
+  font-size: 0.85rem;
+}
+
+.pong-game__scoreline-rule {
+  width: 2rem;
+  height: 1px;
+  background: var(--color-line);
+}
+
+.pong-game__blast-meter {
+  margin-top: 1rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--color-line);
+}
+
+.pong-game__blast-meter-row {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.pong-game__blast-label,
+.pong-game__blast-status,
+.pong-game__blast-instruction {
+  color: var(--color-quiet-ink);
+  font-family: var(--font-code);
+  font-size: 0.58rem;
+  letter-spacing: 0.07em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.pong-game__blast-label {
+  flex: 0 0 auto;
+  color: var(--color-text-muted);
+}
+
+.pong-game__blast-bars {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.18rem;
+  min-width: 0;
+}
+
+.pong-game__blast-bars::before,
+.pong-game__blast-bars::after {
+  position: absolute;
+  pointer-events: none;
+  content: "";
+}
+
+.pong-game__blast-bars::before {
+  z-index: -1;
+  inset: -0.3rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  filter: blur(0.5rem);
+  opacity: 0;
+  transform: scale(0.96);
+}
+
+.pong-game__blast-bars::after {
+  z-index: 2;
+  top: -0.16rem;
+  bottom: -0.16rem;
+  left: 0;
+  width: 28%;
+  background: linear-gradient(90deg, transparent, var(--vi-shine-a), transparent);
+  opacity: 0;
+  transform: translateX(-180%) skewX(-12deg);
+}
+
+.pong-game__blast-bar {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 0.55rem;
+  border: 1px solid var(--color-line);
+  background: transparent;
+  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.pong-game__blast-bar[data-filled="true"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  box-shadow: 0 0 0.55rem color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+.pong-game__blast-bars[data-ready="true"]::before {
+  opacity: 0.38;
+  animation: blast-ready-glow 1.35s ease-in-out infinite;
+  will-change: opacity, transform;
+}
+
+.pong-game__blast-bars[data-ready="true"]::after {
+  animation: blast-ready-shine 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: opacity, transform;
+}
+
+.pong-game__blast-status {
+  min-width: 3.25rem;
+  text-align: right;
+}
+
+.pong-game__blast-status[data-ready="true"] {
+  color: var(--color-accent);
+}
+
+@keyframes blast-ready-shine {
+  0%,
+  18% {
+    opacity: 0;
+    transform: translateX(-180%) skewX(-12deg);
+  }
+  30%,
+  68% {
+    opacity: 0.9;
+  }
+  82%,
+  100% {
+    opacity: 0;
+    transform: translateX(430%) skewX(-12deg);
+  }
+}
+
+@keyframes blast-ready-glow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.82;
+    transform: scale(1.04);
+  }
+}
+
+.pong-game__blast-instruction {
+  display: block;
+  margin-top: 0.45rem;
+}
+
+.pong-game--blast-armed .pong-game__blast-meter {
+  border-top-color: var(--color-accent);
+}
+
+.pong-game__stage {
+  position: relative;
+  display: grid;
+  height: clamp(12.5rem, 27vw, 16rem);
+  margin-top: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  background: var(--color-bg);
+  cursor: crosshair;
+  outline: none;
+  touch-action: none;
+}
+
+.pong-game__stage::after {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  left: 1rem;
+  height: 1px;
+  background: var(--color-line);
+  content: "";
+  opacity: 0.72;
+}
+
+.pong-game__stage:focus-visible {
+  border-color: var(--color-clear-lime);
+}
+
+.pong-game__stage[data-blast-armed="true"] {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 1.2rem color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.pong-game__stage[data-blast-armed="true"]::after {
+  background: var(--color-accent);
+}
+
+.pong-game__stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pong-game__stage-label,
+.pong-game__stage-status {
+  position: absolute;
+  z-index: 2;
+  color: var(--color-quiet-ink);
+  font-family: var(--font-code);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pong-game__stage-label {
+  top: 0.75rem;
+  left: 0.75rem;
+}
+
+.pong-game__stage-status {
+  right: 0.75rem;
+  bottom: 0.75rem;
+}
+
+.pong-game__stage-prompt {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-quiet-ink);
+  font-family: var(--font-code);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  transition: opacity var(--duration-standard) var(--ease-out), transform var(--duration-standard) var(--ease-out);
+  white-space: nowrap;
+}
+
+.pong-game__stage-prompt[data-visible="false"] {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(-50% + 0.35rem));
+}
+
+.pong-game__prompt-title,
+.shiny-text {
+  display: inline-block;
+}
+
+.pong-game__prompt-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.shiny-text {
+  background-size: 220% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 0.75rem color-mix(in srgb, var(--color-accent) 20%, transparent);
+}
+
+.pong-game__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pong-game__difficulty {
+  color: var(--color-quiet-ink);
+  font-family: var(--font-code);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pong-game__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.pong-game__play-button,
+.pong-game__reset-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--color-quiet-ink);
+  background: transparent;
+  color: var(--color-quiet-ink);
+  font-family: var(--font-code);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.pong-game__play-button:hover,
+.pong-game__play-button:focus-visible,
+.pong-game__reset-button:hover,
+.pong-game__reset-button:focus-visible {
+  border-color: var(--color-clear-lime);
+  color: var(--color-clear-lime);
+  transform: translateY(-1px);
+}
+
+.pong-game__reset-button {
+  border-color: var(--color-line);
+  font-weight: 400;
+}
+
+.pong-game__settings {
+  position: absolute;
+  z-index: 4;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  left: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--color-clear-lime);
+  background: color-mix(in srgb, var(--color-surface) 97%, transparent);
+  box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.32);
+  max-height: calc(100% - 2.5rem);
+  overflow-y: auto;
+}
+
+.pong-game__settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--color-text);
+  font-family: var(--font-code);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pong-game__settings-close {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.pong-game__difficulty-group,
+.pong-game__blast-setting-group {
+  margin: 1rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.pong-game__difficulty-group legend,
+.pong-game__blast-setting-group legend {
+  margin-bottom: 0.55rem;
+  color: var(--color-quiet-ink);
+  font-family: var(--font-code);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pong-game__difficulty-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.pong-game__blast-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.pong-game__difficulty-option,
+.pong-game__blast-option {
+  display: flex;
+  min-height: 3.3rem;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.55rem;
+  border: 1px solid var(--color-line);
+  background: transparent;
+  color: var(--color-quiet-ink);
+  text-align: left;
+  transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.pong-game__difficulty-option strong,
+.pong-game__blast-option strong {
+  font-family: var(--font-code);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pong-game__difficulty-option small,
+.pong-game__blast-option small {
+  font-size: 0.68rem;
+}
+
+.pong-game__difficulty-option:hover,
+.pong-game__difficulty-option:focus-visible,
+.pong-game__difficulty-option[data-active="true"],
+.pong-game__blast-option:hover,
+.pong-game__blast-option:focus-visible,
+.pong-game__blast-option[data-active="true"] {
+  border-color: var(--color-clear-lime);
+  background: var(--color-accent-soft);
+  color: var(--color-clear-lime);
+}
+
+.pong-game__toggle-list {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 1rem;
+}
+
+.pong-game__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.55rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.pong-game__toggle-copy,
+.pong-game__toggle-thumb {
+  pointer-events: none;
+}
+
+.pong-game__toggle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.pong-game__toggle-control {
+  position: relative;
+  width: 2.1rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+}
+
+.pong-game__toggle-input {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.pong-game__toggle strong {
+  color: var(--color-text);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.pong-game__toggle small {
+  color: var(--color-quiet-ink);
+  font-size: 0.68rem;
+}
+
+.pong-game__toggle-track {
+  position: relative;
+  display: block;
+  width: 2.1rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  pointer-events: none;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.pong-game__toggle-thumb {
+  position: absolute;
+  top: 0.16rem;
+  left: 0.18rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background: var(--color-quiet-ink);
+  transition: transform var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
+}
+
+.pong-game__toggle[data-checked="true"] .pong-game__toggle-track {
+  border-color: var(--color-clear-lime);
+  background: var(--color-accent-soft);
+}
+
+.pong-game__toggle[data-checked="true"] .pong-game__toggle-thumb {
+  background: var(--color-clear-lime);
+  transform: translateX(0.95rem);
+}
+
+.pong-game__toggle:focus-visible .pong-game__toggle-track {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.pong-game__stage--shake {
+  animation: pong-stage-shake 280ms var(--ease-in-out);
+}
+
+.pong-game__mobile-controls {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .pong-game__mobile-controls {
+    display: block;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .pong-game__mobile-controls-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--color-text-muted);
+    font-family: var(--font-code);
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .pong-game__mobile-controls-heading small {
+    color: var(--color-quiet-ink);
+    font-size: inherit;
+  }
+
+  .pong-game__mobile-controls-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 0.55rem;
+    margin-top: 0.55rem;
+  }
+
+  .pong-game__mobile-direction-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.45rem;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .pong-game__mobile-control,
+  .pong-game__mobile-blast {
+    display: inline-flex;
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    border: 1px solid var(--color-line);
+    background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+    color: var(--color-text);
+    font-family: var(--font-code);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    touch-action: none;
+    transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+  }
+
+  .pong-game__mobile-control:focus-visible,
+  .pong-game__mobile-control:hover,
+  .pong-game__mobile-blast:focus-visible,
+  .pong-game__mobile-blast:hover:not(:disabled) {
+    border-color: var(--color-clear-lime);
+    color: var(--color-clear-lime);
+  }
+
+  .pong-game__mobile-control:active,
+  .pong-game__mobile-blast:active:not(:disabled) {
+    background: var(--color-accent-soft);
+    transform: translateY(1px) scale(0.98);
+  }
+
+  .pong-game__mobile-blast {
+    min-width: min(7.5rem, 34%);
+    flex: 0 0 min(7.5rem, 34%);
+    flex-direction: column;
+    gap: 0.15rem;
+    border-color: var(--color-line);
+  }
+
+  .pong-game__mobile-blast strong {
+    font-size: 0.66rem;
+  }
+
+  .pong-game__mobile-blast small {
+    color: var(--color-quiet-ink);
+    font-size: 0.52rem;
+    letter-spacing: 0.05em;
+  }
+
+  .pong-game__mobile-blast[data-ready="true"] {
+    border-color: var(--color-clear-lime);
+    background: var(--color-accent-soft);
+    color: var(--color-clear-lime);
+  }
+
+  .pong-game__mobile-blast[data-ready="true"] small {
+    color: var(--color-clear-lime);
+  }
+
+  .pong-game__mobile-blast:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+@keyframes pong-stage-shake {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-2px, 1px, 0);
+  }
+  40% {
+    transform: translate3d(2px, -1px, 0);
+  }
+  60% {
+    transform: translate3d(-1px, 1px, 0);
+  }
+  80% {
+    transform: translate3d(1px, 0, 0);
+  }
+}
+
+@media (max-width: 520px) {
+  .pong-game { padding: 1rem; }
+  .pong-game__stage { height: clamp(11.5rem, 56vw, 14rem); }
+  .pong-game__blast-meter-row { grid-template-columns: max-content minmax(0, 1fr); }
+  .pong-game__blast-bars { grid-column: 1 / -1; grid-row: 2; }
+  .pong-game__blast-status { grid-column: 2; grid-row: 1; }
+  .pong-game__footer { align-items: flex-start; flex-direction: column; }
+  .pong-game__actions { width: 100%; justify-content: stretch; }
+  .pong-game__play-button { flex: 1; }
+  .pong-game__settings { right: 1rem; bottom: 1rem; left: 1rem; }
+  .pong-game__difficulty-options { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pong-game__stage--shake,
+  .pong-game__blast-bars[data-ready="true"]::before,
+  .pong-game__blast-bars[data-ready="true"]::after {
+    animation: none;
+  }
+}
