@@ -6,7 +6,7 @@ A stable-ID reorder surface with pointer drag and full keyboard grab/move/drop a
 
 ## Install/import
 
-Import `ViReorderableList`, `ViReorderableListProps`, and `ViReorderRenderState` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/reorderable-list.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -53,3 +53,4 @@ Vitest covers keyboard order, rollback, stable IDs, pointer cleanup, and empty s
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-reorderable-list)
 - [Copyable source bundle](../snippets/reorderable-list.txt)
+- [Motion recording](../media/reorderable-list.webm)

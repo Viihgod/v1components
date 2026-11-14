@@ -6,7 +6,7 @@ Bounded progress gesture for an unlock action, with cancellation and optional re
 
 ## Install/import
 
-Import `ViSlideToUnlock` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/slide-to-unlock.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers keyboard unlock and cleanup; E2E/axe/visual cover locked, focus, a
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-slide-to-unlock)
 - [Copyable source bundle](../snippets/slide-to-unlock.txt)
+- [Motion recording](../media/slide-to-unlock.webm)

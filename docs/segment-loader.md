@@ -53,3 +53,4 @@ Vitest covers count/value bounds; E2E, axe and visual suites cover the published
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-segment-loader)
 - [Copyable source bundle](../snippets/segment-loader.txt)
+- [Motion recording](../media/segment-loader.webm)

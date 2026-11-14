@@ -53,3 +53,4 @@ Vitest covers clamping and labels; E2E/axe/visual cover route semantics and rest
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-elastic-progress)
 - [Copyable source bundle](../snippets/elastic-progress.txt)
+- [Motion recording](../media/elastic-progress.webm)

@@ -6,7 +6,7 @@ A finite stack whose top card can be collected upward or released downward.
 
 ## Install/import
 
-Import `ViDragStackCollect` and `ViDragStackCollectItem` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/drag-stack-collect.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers keyboard directional actions, pointer cancel, empty state, and cle
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-drag-stack-collect)
 - [Copyable source bundle](../snippets/drag-stack-collect.txt)
+- [Motion recording](../media/drag-stack-collect.webm)

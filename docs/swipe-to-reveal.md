@@ -6,7 +6,7 @@ A bounded reveal row whose actions work without hover and remain native buttons.
 
 ## Install/import
 
-Import `ViSwipeToReveal` and `ViSwipeAction` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/swipe-to-reveal.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -52,3 +52,4 @@ Vitest covers controlled/uncontrolled keyboard and action activation; E2E/axe/vi
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-swipe-to-reveal)
 - [Copyable source bundle](../snippets/swipe-to-reveal.txt)
+- [Motion recording](../media/swipe-to-reveal.webm)

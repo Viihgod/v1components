@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/magnetic-button.txt), then import the component from the extracted files.
 import { ViMagneticButton } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Covered by `tests/vicomponents/b01-action-feedback.vitest.tsx` for ref/native ro
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-magnetic-button)
 - [Copyable source bundle](../snippets/magnetic-button.txt)
+- [Motion recording](../media/magnetic-button.webm)

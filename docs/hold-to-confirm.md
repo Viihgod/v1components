@@ -6,7 +6,7 @@ Native hold-to-confirm action with a visible progress cue and an explicit cancel
 
 ## Install/import
 
-Import `ViHoldToConfirm` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/hold-to-confirm.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -45,6 +45,10 @@ Manifest `hold-to-confirm` allowlists the component, B04 manipulation helper, B0
 ## Tests/provenance/source ID
 
 Vitest covers completion, cancellation, timer cleanup, and keyboard parity; E2E/axe/visual cover the published route. Status: published.
+
+## Release behavior
+
+The preview stacks “Hold to” and “confirm” with an 8 px gap. Its live status sits beneath the control.
 
 ## Preview and source
 

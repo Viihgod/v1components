@@ -6,7 +6,7 @@ Shared delayed intent boundary for content that should respond to pointer or foc
 
 ## Install/import
 
-Import ViHoverIntentGate from the V1Components components barrel.
+Use the [source bundle](../snippets/hover-intent-gate.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ B03 tests cover fake timers, focus, pointer leave, cleanup and reduced motion.
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-hover-intent-gate)
 - [Copyable source bundle](../snippets/hover-intent-gate.txt)
+- [Motion recording](../media/hover-intent-gate.webm)

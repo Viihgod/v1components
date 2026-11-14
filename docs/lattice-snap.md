@@ -6,7 +6,7 @@ A finite grid snap target with roving focus and deterministic arrow movement.
 
 ## Install/import
 
-Import `ViLatticeSnap`, `ViLatticeValue`, and `ViLatticeSnapProps` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/lattice-snap.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -51,3 +51,4 @@ Vitest covers controlled/uncontrolled selection, arrow/Home/End, disabled and em
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-lattice-snap)
 - [Copyable source bundle](../snippets/lattice-snap.txt)
+- [Motion recording](../media/lattice-snap.webm)

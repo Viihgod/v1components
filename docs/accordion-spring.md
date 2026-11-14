@@ -6,7 +6,7 @@ Single or multiple disclosure group with native buttons and a stable focus model
 
 ## Install/import
 
-Import ViAccordionSpring from the V1Components components barrel.
+Use the [source bundle](../snippets/accordion-spring.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -43,6 +43,10 @@ Manifest allowlists the component, navigation helper and shared B03 stylesheet.
 ## Tests/provenance/source ID
 
 B03 tests cover controlled/uncontrolled disclosure, roving keys, Escape, empty state and reduced motion.
+
+## Release behavior
+
+Each trigger keeps the eyebrow and title on separate lines. Content opens below a fixed-width header, with a centered Phosphor caret.
 
 ## Preview and source
 

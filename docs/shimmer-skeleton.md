@@ -52,3 +52,4 @@ Vitest covers bounded lines and static inactive state; E2E/axe/visual cover redu
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-shimmer-skeleton)
 - [Copyable source bundle](../snippets/shimmer-skeleton.txt)
+- [Motion recording](../media/shimmer-skeleton.webm)

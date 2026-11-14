@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/swatch-picker.txt), then import the component from the extracted files.
 import { ViSwatchPicker } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Roving keyboard, disabled, labels, controlled state and form serialization cover
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-swatch-picker)
 - [Copyable source bundle](../snippets/swatch-picker.txt)
+- [Motion recording](../media/swatch-picker.webm)

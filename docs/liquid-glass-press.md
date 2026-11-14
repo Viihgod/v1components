@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/liquid-glass-press.txt), then import the component from the extracted files.
 import { ViLiquidGlassPress } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Single native root, disabled, focus, reduced-motion and progressive material cov
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-liquid-glass-press)
 - [Copyable source bundle](../snippets/liquid-glass-press.txt)
+- [Motion recording](../media/liquid-glass-press.webm)

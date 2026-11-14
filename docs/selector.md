@@ -6,7 +6,7 @@ Published single- or multi-value selector with matching native option semantics.
 
 ## Install/import
 
-Import the selector from the public V1Components barrel or use `/lab/selector`.
+Use the [source bundle](../snippets/selector.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ Covered by portable, Lab, axe and visual tests. Clean-room compatibility documen
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-selector)
 - [Copyable source bundle](../snippets/selector.txt)
+- [Motion recording](../media/selector.webm)

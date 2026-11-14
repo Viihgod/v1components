@@ -6,7 +6,7 @@ Contextual toolbar with local magnification that supplements native navigation.
 
 ## Install/import
 
-Import ViContextualDock from the V1Components components barrel.
+Use the [source bundle](../snippets/contextual-dock.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ B03 suites cover toolbar semantics, callbacks, keyboard/touch and reduced motion
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-contextual-dock)
 - [Copyable source bundle](../snippets/contextual-dock.txt)
+- [Motion recording](../media/contextual-dock.webm)

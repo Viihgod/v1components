@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/notification-slide-in.txt), then import the component from the extracted files.
 import { ViNotificationSlideIn } from "@/components/vicomponents/components/notification-slide-in";
 ```
 
@@ -53,3 +53,4 @@ Vitest covers controlled visibility, timer/focus behavior, and cleanup. E2E/axe/
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-notification-slide-in)
 - [Copyable source bundle](../snippets/notification-slide-in.txt)
+- [Motion recording](../media/notification-slide-in.webm)

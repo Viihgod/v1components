@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/bookmark-toggle.txt), then import the component from the extracted files.
 import { ViBookmarkToggle } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Controlled/uncontrolled state, callback, disabled, focus and reduced-motion beha
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-bookmark-toggle)
 - [Copyable source bundle](../snippets/bookmark-toggle.txt)
+- [Motion recording](../media/bookmark-toggle.webm)

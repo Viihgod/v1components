@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/toast-overshoot.txt), then import the component from the extracted files.
 import { ViToastOvershoot } from "@/components/vicomponents/components/toast-overshoot";
 ```
 
@@ -55,3 +55,4 @@ Vitest covers timeout pause/resume, controlled close, focus restoration and redu
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-toast-overshoot)
 - [Copyable source bundle](../snippets/toast-overshoot.txt)
+- [Motion recording](../media/toast-overshoot.webm)

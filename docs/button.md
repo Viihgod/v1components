@@ -6,7 +6,7 @@ Published compatibility action primitive with native button semantics.
 
 ## Install/import
 
-Import the button from the public V1Components barrel or use `/lab/button`.
+Use the [source bundle](../snippets/button.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ Covered by core, portable, Lab, axe and visual tests. Clean-room compatibility d
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-button)
 - [Copyable source bundle](../snippets/button.txt)
+- [Motion recording](../media/button.webm)

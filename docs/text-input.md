@@ -6,7 +6,7 @@ Published compatibility text field with native form behavior and validation copy
 
 ## Install/import
 
-Import the field from the public V1Components barrel or use `/lab/text-input`.
+Use the [source bundle](../snippets/text-input.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ Covered by portable, Lab, axe and visual tests. Clean-room compatibility documen
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-text-input)
 - [Copyable source bundle](../snippets/text-input.txt)
+- [Motion recording](../media/text-input.webm)

@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/like-burst.txt), then import the component from the extracted files.
 import { ViLikeBurst } from "@/components/vicomponents";
 ```
 

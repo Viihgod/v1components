@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/push-button.txt), then import the component from the extracted files.
 import { ViPushButton } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Native root, ref, disabled and visual contract coverage is part of `b01-action-f
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-push-button)
 - [Copyable source bundle](../snippets/push-button.txt)
+- [Motion recording](../media/push-button.webm)

@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/expanding-search.txt), then import the component from the extracted files.
 import { ViExpandingSearch } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Controlled/uncontrolled query, submit/Escape, focus width and native attributes 
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-expanding-search)
 - [Copyable source bundle](../snippets/expanding-search.txt)
+- [Motion recording](../media/expanding-search.webm)

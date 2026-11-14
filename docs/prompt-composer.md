@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/prompt-composer.txt), then import the component from the extracted files.
 import { ViPromptComposer } from "@/components/vicomponents/components/prompt-composer";
 ```
 
@@ -53,3 +53,4 @@ Vitest covers controlled/uncontrolled text, max length, Ctrl/Cmd+Enter, and pend
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-prompt-composer)
 - [Copyable source bundle](../snippets/prompt-composer.txt)
+- [Motion recording](../media/prompt-composer.webm)

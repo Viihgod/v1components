@@ -6,7 +6,7 @@ Legacy Lab navigation demo retained as a published compatibility entry.
 
 ## Install/import
 
-Open the `/lab#v1c-segmented` demo or use the public Lab composition; no private component import is required.
+Use the [source bundle](../snippets/segmented.txt), then import the component from the extracted files.
 
 ## Anatomy
 

@@ -6,7 +6,7 @@ A cancellable one-axis drag surface with pointer, touch, keyboard, and focus par
 
 ## Install/import
 
-Import `ViDragToDismiss` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/drag-to-dismiss.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers keyboard, pointer completion/cancel, disabled, and cleanup; E2E/ax
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-drag-to-dismiss)
 - [Copyable source bundle](../snippets/drag-to-dismiss.txt)
+- [Motion recording](../media/drag-to-dismiss.webm)

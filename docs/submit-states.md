@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/submit-states.txt), then import the component from the extracted files.
 import { ViSubmitStates } from "@/components/vicomponents/components/submit-states";
 ```
 
@@ -53,3 +53,4 @@ Vitest covers pending duplicate prevention, terminal reset, custom labels, and d
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-submit-states)
 - [Copyable source bundle](../snippets/submit-states.txt)
+- [Motion recording](../media/submit-states.webm)

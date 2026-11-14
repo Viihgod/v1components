@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/status-pill.txt), then import the component from the extracted files.
 import { ViStatusPill } from "@/components/vicomponents/components/status-pill";
 ```
 
@@ -53,3 +53,4 @@ Vitest verifies readable labels and that unrelated rerenders do not create dupli
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-status-pill)
 - [Copyable source bundle](../snippets/status-pill.txt)
+- [Motion recording](../media/status-pill.webm)

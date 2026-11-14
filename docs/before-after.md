@@ -6,7 +6,7 @@ A native range comparison with a focus-visible divider between before and after 
 
 ## Install/import
 
-Import `ViBeforeAfter` and `ViBeforeAfterProps` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/before-after.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers controlled/uncontrolled range changes, orientation, labels, and re
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-before-after)
 - [Copyable source bundle](../snippets/before-after.txt)
+- [Motion recording](../media/before-after.webm)

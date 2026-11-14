@@ -53,3 +53,4 @@ Vitest checks paused static state; E2E/axe/visual cover label, reduced motion an
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-orbit-spinner)
 - [Copyable source bundle](../snippets/orbit-spinner.txt)
+- [Motion recording](../media/orbit-spinner.webm)

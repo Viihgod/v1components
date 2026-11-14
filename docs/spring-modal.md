@@ -6,7 +6,7 @@ Legacy Lab modal demo retained to preserve the original overlay contract.
 
 ## Install/import
 
-Open `/lab/spring-modal` for the published compatibility example; the route owns its local demo import.
+Use the [source bundle](../snippets/spring-modal.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -34,7 +34,7 @@ Only the active overlay is animated; no global listener or persistent timer is u
 
 ## Example
 
-Use the trigger and dialog on `/lab/spring-modal` as the reference example.
+Use the trigger and dialog on [the Lab preview](https://victormarques.dev/lab#v1c-spring-modal) as the reference example.
 
 ## Portable source
 
@@ -48,3 +48,4 @@ Covered by Lab route and accessibility E2E checks. Clean-room compatibility docu
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-spring-modal)
 - [Copyable source bundle](../snippets/spring-modal.txt)
+- [Motion recording](../media/spring-modal.webm)

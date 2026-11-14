@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/star-rating.txt), then import the component from the extracted files.
 import { ViStarRating } from "@/components/vicomponents";
 ```
 
@@ -47,6 +47,10 @@ The manifest includes the component, `form-input-utils.ts`, shared B02 CSS and t
 ## Tests and provenance
 
 Keyboard, controlled/uncontrolled, clear/read-only and reduced-motion coverage is in `tests/vicomponents/b02-inputs.vitest.tsx`. Clean-room source ID: **14**.
+
+## Release behavior
+
+Five stars trigger five hearts in sequence, then an accent border, outer glow and a finite spark burst. Individual selections originate at the selected star.
 
 ## Preview and source
 

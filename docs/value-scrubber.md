@@ -6,7 +6,7 @@ Horizontal timeline-style scrubber with pointer, touch, and keyboard parity.
 
 ## Install/import
 
-Import `ViValueScrubber` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/value-scrubber.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers keyboard bounds; E2E/axe/visual cover pointer/focus/rest behavior.
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-value-scrubber)
 - [Copyable source bundle](../snippets/value-scrubber.txt)
+- [Motion recording](../media/value-scrubber.webm)

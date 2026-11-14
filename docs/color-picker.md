@@ -6,7 +6,7 @@ Published color field with a native input path and curated swatches.
 
 ## Install/import
 
-Import the color picker from the public V1Components barrel or use `/lab/color-picker`.
+Use the [source bundle](../snippets/color-picker.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ Covered by portable, Lab, axe and visual tests. Clean-room compatibility documen
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-color-picker)
 - [Copyable source bundle](../snippets/color-picker.txt)
+- [Motion recording](../media/color-picker.webm)

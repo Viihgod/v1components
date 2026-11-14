@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/undo-snackbar.txt), then import the component from the extracted files.
 import { ViUndoSnackbar } from "@/components/vicomponents/components/undo-snackbar";
 ```
 
@@ -53,3 +53,4 @@ Vitest covers controlled close, action callback, timer pause, and cleanup. E2E/a
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-undo-snackbar)
 - [Copyable source bundle](../snippets/undo-snackbar.txt)
+- [Motion recording](../media/undo-snackbar.webm)

@@ -6,7 +6,7 @@ Compact tablist with a CSS glide treatment and explicit automatic/manual activat
 
 ## Install/import
 
-Import ViTabPillGlide from the V1Components components barrel.
+Use the [source bundle](../snippets/tab-pill-glide.txt), then import the component from the extracted files.
 
 ## Anatomy
 

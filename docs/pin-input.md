@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/pin-input.txt), then import the component from the extracted files.
 import { ViPinInput } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Paste, backspace, IME, completion, controlled/uncontrolled and form behavior are
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-pin-input)
 - [Copyable source bundle](../snippets/pin-input.txt)
+- [Motion recording](../media/pin-input.webm)

@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/keycap-press.txt), then import the component from the extracted files.
 import { ViKeycapPress } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Keyboard/native focus, controlled state, disabled and depth contract coverage is
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-keycap-press)
 - [Copyable source bundle](../snippets/keycap-press.txt)
+- [Motion recording](../media/keycap-press.webm)

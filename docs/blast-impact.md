@@ -6,7 +6,7 @@ Published compatibility entry for the Pong Lab surface and its impact feedback.
 
 ## Install/import
 
-Use the `/lab/blast-impact` route; its server-collected source is available through the allowlisted Lab collector.
+Use the [source bundle](../snippets/blast-impact.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -34,7 +34,7 @@ The game loop is scoped to the active Lab surface and portable source limits the
 
 ## Example
 
-Use `/lab/blast-impact` as the complete Pong compatibility example.
+Use [the Lab preview](https://victormarques.dev/lab#v1c-blast-impact) as the complete Pong compatibility example.
 
 ## Portable source
 
@@ -48,3 +48,4 @@ Covered by the Lab, portable, axe and visual harnesses. Clean-room compatibility
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-blast-impact)
 - [Copyable source bundle](../snippets/blast-impact.txt)
+- [Motion recording](../media/blast-impact.webm)

@@ -6,7 +6,7 @@ Published keyboard-ready calendar field with deterministic date formatting.
 
 ## Install/import
 
-Import the date picker from the public V1Components barrel or use `/lab/date-picker`.
+Use the [source bundle](../snippets/date-picker.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ Covered by utility, portable, Lab, axe and visual tests. Clean-room compatibilit
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-date-picker)
 - [Copyable source bundle](../snippets/date-picker.txt)
+- [Motion recording](../media/date-picker.webm)

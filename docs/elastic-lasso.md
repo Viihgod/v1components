@@ -6,7 +6,7 @@ A bounded selection rectangle with click, touch, and keyboard alternatives.
 
 ## Install/import
 
-Import `ViElasticLasso`, `ViElasticLassoItem`, and `ViElasticLassoProps` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/elastic-lasso.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers click, select-all, clear, controlled values, disabled items, colli
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-elastic-lasso)
 - [Copyable source bundle](../snippets/elastic-lasso.txt)
+- [Motion recording](../media/elastic-lasso.webm)

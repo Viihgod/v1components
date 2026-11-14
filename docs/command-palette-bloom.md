@@ -6,7 +6,7 @@ Filterable command dialog with a global shortcut, native search input and focus 
 
 ## Install/import
 
-Import ViCommandPaletteBloom from the V1Components components barrel.
+Use the [source bundle](../snippets/command-palette-bloom.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -44,7 +44,12 @@ Manifest allowlists the component, navigation helper and shared B03 stylesheet.
 
 B03 tests cover shortcut, controlled open, filtering, selection, Escape/focus return, axe and visual open states.
 
+## Release behavior
+
+The trigger uses symmetric block padding and centers the title and shortcut. The result list uses compact vertical spacing.
+
 ## Preview and source
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-command-palette-bloom)
 - [Copyable source bundle](../snippets/command-palette-bloom.txt)
+- [Motion recording](../media/command-palette-bloom.webm)

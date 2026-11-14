@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/choice-chips.txt), then import the component from the extracted files.
 import { ViChoiceChips } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Selection modes, controlled state, roving keys, disabled options and form serial
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-choice-chips)
 - [Copyable source bundle](../snippets/choice-chips.txt)
+- [Motion recording](../media/choice-chips.webm)

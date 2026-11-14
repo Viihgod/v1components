@@ -6,7 +6,7 @@ Radial slider for bounded pointer adjustment with a complete keyboard equivalent
 
 ## Install/import
 
-Import `ViRotaryKnob` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/rotary-knob.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers arrows and clamping; E2E/axe/visual cover focus and rest states. S
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-rotary-knob)
 - [Copyable source bundle](../snippets/rotary-knob.txt)
+- [Motion recording](../media/rotary-knob.webm)

@@ -6,7 +6,7 @@ Published compatibility entry for the Selected Work surface and its local pointe
 
 ## Install/import
 
-Use the public surface contract or open `/lab/hover-glow-container`; do not import the route's private implementation.
+Use the [source bundle](../snippets/hover-glow-container.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -34,7 +34,7 @@ The pointer effect is container-scoped and writes only CSS variables; no global 
 
 ## Example
 
-Use the Selected Work cards on `/lab/hover-glow-container` as the reference example.
+Use the Selected Work cards on [the Lab preview](https://victormarques.dev/lab#v1c-hover-glow-container) as the reference example.
 
 ## Portable source
 
@@ -48,3 +48,4 @@ Covered by core, Lab and visual checks. Clean-room compatibility documentation; 
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-hover-glow-container)
 - [Copyable source bundle](../snippets/hover-glow-container.txt)
+- [Motion recording](../media/hover-glow-container.webm)

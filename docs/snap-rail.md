@@ -6,7 +6,7 @@ Scrollable snap rail with an explicit listbox selection model and touch parity.
 
 ## Install/import
 
-Import ViSnapRail from the V1Components components barrel.
+Use the [source bundle](../snippets/snap-rail.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ B03 suites cover listbox semantics, keyboard, selectOnHover, empty state, zoom-s
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-snap-rail)
 - [Copyable source bundle](../snippets/snap-rail.txt)
+- [Motion recording](../media/snap-rail.webm)

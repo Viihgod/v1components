@@ -6,7 +6,7 @@ Compact roving focus group that relays the active value without pointer tracking
 
 ## Install/import
 
-Import ViFocusRelay from the V1Components components barrel.
+Use the [source bundle](../snippets/focus-relay.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ B03 tests cover controlled/uncontrolled selection, keyboard traversal, disabled 
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-focus-relay)
 - [Copyable source bundle](../snippets/focus-relay.txt)
+- [Motion recording](../media/focus-relay.webm)

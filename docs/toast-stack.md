@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/toast-stack.txt), then import the component from the extracted files.
 import { ViToastStack, type ViToastStackItem } from "@/components/vicomponents/components/toast-stack";
 ```
 
@@ -53,3 +53,4 @@ Vitest covers maxVisible/order, hidden-document timer pausing, stable-ID dismiss
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-toast-stack)
 - [Copyable source bundle](../snippets/toast-stack.txt)
+- [Motion recording](../media/toast-stack.webm)

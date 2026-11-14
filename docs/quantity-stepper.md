@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/quantity-stepper.txt), then import the component from the extracted files.
 import { ViQuantityStepper } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Boundary, step, form serialization, keyboard and disabled coverage is in `b02-in
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-quantity-stepper)
 - [Copyable source bundle](../snippets/quantity-stepper.txt)
+- [Motion recording](../media/quantity-stepper.webm)

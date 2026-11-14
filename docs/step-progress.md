@@ -53,3 +53,4 @@ Vitest covers controlled updates and arrows/Home/End/Enter; E2E/axe/visual cover
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-step-progress)
 - [Copyable source bundle](../snippets/step-progress.txt)
+- [Motion recording](../media/step-progress.webm)

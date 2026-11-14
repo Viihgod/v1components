@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/badge-counter.txt), then import the component from the extracted files.
 import { ViBadgeCounter } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Count formatting, native focus, disabled and visual state coverage is in `b01-ac
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-badge-counter)
 - [Copyable source bundle](../snippets/badge-counter.txt)
+- [Motion recording](../media/badge-counter.webm)

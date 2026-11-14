@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/ripple-feedback.txt), then import the component from the extracted files.
 import { ViRippleFeedback } from "@/components/vicomponents";
 ```
 
@@ -54,3 +54,4 @@ Pointer, touch, keyboard, disabled, reduced-motion, cleanup and single-root cove
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-ripple-feedback)
 - [Copyable source bundle](../snippets/ripple-feedback.txt)
+- [Motion recording](../media/ripple-feedback.webm)

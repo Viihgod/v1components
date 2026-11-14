@@ -6,7 +6,7 @@ Bounded two-axis pointer surface with a keyboard-operable thumb and optional ret
 
 ## Install/import
 
-Import `ViKineticXyPad` and `ViKineticXyValue` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/kinetic-xy-pad.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers keyboard parity and bounds; E2E/axe/visual cover the labelled thum
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-kinetic-xy-pad)
 - [Copyable source bundle](../snippets/kinetic-xy-pad.txt)
+- [Motion recording](../media/kinetic-xy-pad.webm)

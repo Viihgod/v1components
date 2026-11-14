@@ -6,7 +6,7 @@ Focusable finite keyboard sequence with a timeout, mismatch callback, and comple
 
 ## Install/import
 
-Import `ViGestureChord` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/gesture-chord.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers completion, mismatch, timeout, and cleanup; E2E/axe/visual cover f
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-gesture-chord)
 - [Copyable source bundle](../snippets/gesture-chord.txt)
+- [Motion recording](../media/gesture-chord.webm)

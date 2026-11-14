@@ -53,3 +53,4 @@ Vitest covers max/strength bounds; E2E/axe/visual cover states and reduced motio
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-signal-bars)
 - [Copyable source bundle](../snippets/signal-bars.txt)
+- [Motion recording](../media/signal-bars.webm)

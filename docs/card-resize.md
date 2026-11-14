@@ -6,7 +6,7 @@ Disclosure card for revealing secondary content without measuring or translating
 
 ## Install/import
 
-Import ViCardResize from the V1Components components barrel.
+Use the [source bundle](../snippets/card-resize.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ Vitest, E2E, axe and visual coverage live in the B03 suites.
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-card-resize)
 - [Copyable source bundle](../snippets/card-resize.txt)
+- [Motion recording](../media/card-resize.webm)

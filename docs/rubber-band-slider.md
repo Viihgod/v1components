@@ -6,7 +6,7 @@ Native range input with deterministic clamping and a tokenized resistance cue.
 
 ## Install/import
 
-Import `ViRubberBandSlider` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/rubber-band-slider.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers native change and bounds; E2E/axe/visual cover keyboard, focus, an
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-rubber-band-slider)
 - [Copyable source bundle](../snippets/rubber-band-slider.txt)
+- [Motion recording](../media/rubber-band-slider.webm)

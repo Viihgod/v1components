@@ -53,3 +53,4 @@ Vitest covers label and active state; E2E/axe/visual cover semantics and reduced
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-indeterminate-bar)
 - [Copyable source bundle](../snippets/indeterminate-bar.txt)
+- [Motion recording](../media/indeterminate-bar.webm)

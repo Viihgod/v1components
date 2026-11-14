@@ -6,7 +6,7 @@ Push-to-talk lifecycle button that emits start/end/cancel callbacks and never re
 
 ## Install/import
 
-Import `ViHoldToTalk` and `ViHoldToTalkState` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/hold-to-talk.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers pointer lifecycle and the no-microphone contract; E2E/axe/visual c
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-hold-to-talk)
 - [Copyable source bundle](../snippets/hold-to-talk.txt)
+- [Motion recording](../media/hold-to-talk.webm)

@@ -6,7 +6,7 @@ Radial action menu whose orbital placement is a decorative transform around a na
 
 ## Install/import
 
-Import ViOrbitalActionMenu from the V1Components components barrel.
+Use the [source bundle](../snippets/orbital-action-menu.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ B03 tests cover keyboard fallback, controlled open state, touch activation and v
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-orbital-action-menu)
 - [Copyable source bundle](../snippets/orbital-action-menu.txt)
+- [Motion recording](../media/orbital-action-menu.webm)

@@ -6,7 +6,7 @@ Responsive grid of expandable tiles with local layout changes and no scroll-jump
 
 ## Install/import
 
-Import ViBentoExpand from the V1Components components barrel.
+Use the [source bundle](../snippets/bento-expand.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -43,6 +43,10 @@ Manifest allowlists the component, navigation helper and shared B03 stylesheet.
 ## Tests/provenance/source ID
 
 B03 tests cover controlled state, grid keyboard behavior, empty content, dynamic panels and reduced motion.
+
+## Release behavior
+
+The eyebrow, title and expanded content are separate layers. The expanded item may span columns; its siblings keep their own heights.
 
 ## Preview and source
 

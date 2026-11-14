@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/password-meter.txt), then import the component from the extracted files.
 import { ViPasswordMeter } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Derived/explicit scores, labels, live semantics, reduced motion and no-secret-ou
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-password-meter)
 - [Copyable source bundle](../snippets/password-meter.txt)
+- [Motion recording](../media/password-meter.webm)

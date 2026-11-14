@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/toggle-pills.txt), then import the component from the extracted files.
 import { ViTogglePills } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Controlled/uncontrolled, keyboard, disabled and form serialization coverage is i
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-toggle-pills)
 - [Copyable source bundle](../snippets/toggle-pills.txt)
+- [Motion recording](../media/toggle-pills.webm)

@@ -6,7 +6,7 @@ Frame-index scrubber with an accessible timestamp, decorative thumbnails, and an
 
 ## Install/import
 
-Import `ViFilmstripScrubber` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/filmstrip-scrubber.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers empty and native range behavior; E2E/axe/visual cover populated re
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-filmstrip-scrubber)
 - [Copyable source bundle](../snippets/filmstrip-scrubber.txt)
+- [Motion recording](../media/filmstrip-scrubber.webm)

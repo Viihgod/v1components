@@ -54,3 +54,4 @@ Vitest covers minimum duration and hydration-safe output; E2E/axe/visual cover l
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-skeleton-to-content)
 - [Copyable source bundle](../snippets/skeleton-to-content.txt)
+- [Motion recording](../media/skeleton-to-content.webm)

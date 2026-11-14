@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/switch-spring.txt), then import the component from the extracted files.
 import { ViSwitchSpring } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Controlled/uncontrolled, label, keyboard, disabled and form behavior are covered
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-switch-spring)
 - [Copyable source bundle](../snippets/switch-spring.txt)
+- [Motion recording](../media/switch-spring.webm)

@@ -6,7 +6,7 @@ Floating action trigger that opens a touch- and keyboard-friendly menu.
 
 ## Install/import
 
-Import ViSpeedDialFab from the V1Components components barrel.
+Use the [source bundle](../snippets/speed-dial-fab.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -43,6 +43,10 @@ Manifest allowlists the component, navigation helper and shared B03 stylesheet.
 ## Tests/provenance/source ID
 
 B03 suites cover opening, action selection, keyboard/touch, focus restoration, axe and visual states.
+
+## Release behavior
+
+The default popup opens below the trigger, with both left edges aligned. Use the placement prop to change the alignment and vertical side. Outside pointer input and Escape close the popup.
 
 ## Preview and source
 

@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/tag-input.txt), then import the component from the extracted files.
 import { ViTagInput } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Controlled/uncontrolled tags, paste/separators, validation, max tags, Backspace,
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-tag-input)
 - [Copyable source bundle](../snippets/tag-input.txt)
+- [Motion recording](../media/tag-input.webm)

@@ -53,3 +53,4 @@ Vitest covers clamping and charging text; E2E/axe/visual cover empty/full/chargi
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-battery-charge)
 - [Copyable source bundle](../snippets/battery-charge.txt)
+- [Motion recording](../media/battery-charge.webm)

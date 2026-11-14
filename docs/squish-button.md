@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/squish-button.txt), then import the component from the extracted files.
 import { ViSquishButton } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Native root, disabled, focus and reduced-motion coverage is in `b01-action-feedb
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-squish-button)
 - [Copyable source bundle](../snippets/squish-button.txt)
+- [Motion recording](../media/squish-button.webm)

@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/floating-label.txt), then import the component from the extracted files.
 import { ViFloatingLabel } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Label association, invalid state, native attributes and hydration-safe initial r
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-floating-label)
 - [Copyable source bundle](../snippets/floating-label.txt)
+- [Motion recording](../media/floating-label.webm)

@@ -6,7 +6,7 @@ Delayed, non-interactive tooltip for concise presentational hints.
 
 ## Install/import
 
-Import ViDelayedTooltip from the V1Components components barrel.
+Use the [source bundle](../snippets/delayed-tooltip.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ B03 tests cover pointer/focus delays, cleanup, placement, noninteractive content
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-delayed-tooltip)
 - [Copyable source bundle](../snippets/delayed-tooltip.txt)
+- [Motion recording](../media/delayed-tooltip.webm)

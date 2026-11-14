@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/copy-button.txt), then import the component from the extracted files.
 import { ViCopyButton } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Clipboard success/error, fallback path, callback, disabled and unmount cleanup a
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-copy-button)
 - [Copyable source bundle](../snippets/copy-button.txt)
+- [Motion recording](../media/copy-button.webm)

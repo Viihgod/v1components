@@ -6,7 +6,7 @@ Legacy Lab loading indicator retained as a published compatibility entry.
 
 ## Install/import
 
-Open `/lab/elastic-loading` for the compatibility example; it is loaded through the explicit Lab demo map.
+Use the [source bundle](../snippets/elastic-loading.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -34,7 +34,7 @@ Dot count is capped and the loop uses transform/opacity rather than layout prope
 
 ## Example
 
-Use `/lab/elastic-loading` as the reference loading example.
+Use [the Lab preview](https://victormarques.dev/lab#v1c-elastic-loading) as the reference loading example.
 
 ## Portable source
 
@@ -48,3 +48,4 @@ Covered by Lab route and accessibility E2E checks. Clean-room compatibility docu
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-elastic-loading)
 - [Copyable source bundle](../snippets/elastic-loading.txt)
+- [Motion recording](../media/elastic-loading.webm)

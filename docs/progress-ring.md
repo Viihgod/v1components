@@ -53,3 +53,4 @@ Vitest covers clamp and label semantics; E2E/axe/visual cover fixed geometry, zo
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-progress-ring)
 - [Copyable source bundle](../snippets/progress-ring.txt)
+- [Motion recording](../media/progress-ring.webm)

@@ -52,3 +52,4 @@ Vitest uses fake timers for completion, hidden-document pause and reset; E2E/axe
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-countdown-ring)
 - [Copyable source bundle](../snippets/countdown-ring.txt)
+- [Motion recording](../media/countdown-ring.webm)

@@ -6,7 +6,7 @@ Finite listbox with roving focus, arrows, click selection, and a short touch-swi
 
 ## Install/import
 
-Import `ViMomentumPicker` and `ViManipulationItem` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/momentum-picker.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers pointer swipe, empty state, and selection; E2E/axe/visual cover op
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-momentum-picker)
 - [Copyable source bundle](../snippets/momentum-picker.txt)
+- [Motion recording](../media/momentum-picker.webm)

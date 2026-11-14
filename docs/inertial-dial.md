@@ -6,7 +6,7 @@ Vertical drag dial with a bounded, interruptible release settle.
 
 ## Install/import
 
-Import `ViInertialDial` from `src/components/vicomponents/components`.
+Use the [source bundle](../snippets/inertial-dial.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -50,3 +50,4 @@ Vitest covers arrows and cancellation; E2E/axe/visual cover rest/focus/reduced m
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-inertial-dial)
 - [Copyable source bundle](../snippets/inertial-dial.txt)
+- [Motion recording](../media/inertial-dial.webm)

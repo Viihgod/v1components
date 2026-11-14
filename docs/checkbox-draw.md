@@ -6,7 +6,7 @@
 
 ## Install/import
 
-```tsx
+Use the [source bundle](../snippets/checkbox-draw.txt), then import the component from the extracted files.
 import { ViCheckboxDraw } from "@/components/vicomponents";
 ```
 
@@ -52,3 +52,4 @@ Controlled/uncontrolled, Space, label, disabled, name serialization and reduced-
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-checkbox-draw)
 - [Copyable source bundle](../snippets/checkbox-draw.txt)
+- [Motion recording](../media/checkbox-draw.webm)

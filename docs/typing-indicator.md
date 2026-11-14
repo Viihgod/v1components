@@ -53,3 +53,4 @@ Vitest covers count bounds and inactive fallback; E2E/axe/visual cover label and
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-typing-indicator)
 - [Copyable source bundle](../snippets/typing-indicator.txt)
+- [Motion recording](../media/typing-indicator.webm)

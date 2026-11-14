@@ -6,7 +6,7 @@ Published compatibility single-value menu with native keyboard interaction.
 
 ## Install/import
 
-Import the dropdown from the public V1Components barrel or use `/lab/dropdown`.
+Use the [source bundle](../snippets/dropdown.txt), then import the component from the extracted files.
 
 ## Anatomy
 
@@ -48,3 +48,4 @@ Covered by portable, Lab, axe and visual tests. Clean-room compatibility documen
 
 - [Interactive preview and live Settings](https://victormarques.dev/lab#v1c-dropdown)
 - [Copyable source bundle](../snippets/dropdown.txt)
+- [Motion recording](../media/dropdown.webm)
