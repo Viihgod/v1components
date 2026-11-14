@@ -48,7 +48,7 @@ Vitest covers completion, cancellation, timer cleanup, and keyboard parity; E2E/
 
 ## Release behavior
 
-The preview stacks “Hold to” and “confirm” with an 8 px gap. Its live status sits beneath the control.
+The pill keeps “Hold to confirm” on one line. Its live status sits beneath the control with an 8 px gap.
 
 ## Preview and source
 

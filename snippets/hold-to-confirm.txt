@@ -1018,7 +1018,18 @@ import { ViHoldToConfirm } from "../components/hold-to-confirm";
 
 export function HoldToConfirmDemo({ visual }: { visual?: ViVisualProps }) {
   const [status, setStatus] = useState("Waiting");
-  return <div className="vi-b04-demo vi-hold-confirm-demo"><ViHoldToConfirm {...visual} label="Hold to confirm" holdMs={650} onConfirm={() => setStatus("Confirmed")} onCancel={() => setStatus("Cancelled")}><span className="vi-hold-confirm-demo__label">Hold to<span>confirm</span></span></ViHoldToConfirm><small aria-live="polite">{status}</small></div>;
+  return (
+    <div className="vi-b04-demo vi-hold-confirm-demo">
+      <ViHoldToConfirm
+        {...visual}
+        label="Hold to confirm"
+        holdMs={650}
+        onConfirm={() => setStatus("Confirmed")}
+        onCancel={() => setStatus("Cancelled")}
+      />
+      <small aria-live="polite">{status}</small>
+    </div>
+  );
 }
 
 // --- src/components/vicomponents/demos/demos.css ---
@@ -1338,10 +1349,8 @@ export function HoldToConfirmDemo({ visual }: { visual?: ViVisualProps }) {
   gap: var(--vi-space-2, 0.5rem);
 }
 
-.vi-hold-confirm-demo__label {
-  display: grid;
-  gap: var(--vi-space-2, 0.5rem);
-  padding-block: var(--vi-space-2, 0.5rem);
+.vi-hold-confirm-demo .vi-b04-hold {
+  white-space: nowrap;
 }
 
 // --- src/components/vicomponents/tokens.css ---
