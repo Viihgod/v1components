@@ -5,3 +5,5 @@
 - Keep the interaction geometry stable through the transition. Disclosures may expand down while siblings and control widths remain stable.
 - Prefer transform and opacity for lightweight changes. Reuse the shared hover handler and existing tokens before adding a timeline.
 - Honor reduced motion, keyboard input, and cancellation. Preserve readable static state after every animation.
+
+Use the [motion skills](SKILLS.md) for implementation and review workflows in Codex or Claude Code.
