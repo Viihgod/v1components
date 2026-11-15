@@ -10,8 +10,8 @@ Run either pair with the GitHub CLI in your project. Use `--scope user` to make 
 ### Codex
 
 ```sh
-gh skill install Viihgod/v1components skills/v1c-motion --agent codex --scope project
-gh skill install Viihgod/v1components skills/v1c-motion-review --agent codex --scope project
+gh skill install Viihgod/v1components skills/v1c-motion --agent codex --scope project --pin main
+gh skill install Viihgod/v1components skills/v1c-motion-review --agent codex --scope project --pin main
 ```
 
 In Codex, invoke `$v1c-motion` or `$v1c-motion-review`.
@@ -19,8 +19,8 @@ In Codex, invoke `$v1c-motion` or `$v1c-motion-review`.
 ### Claude Code
 
 ```sh
-gh skill install Viihgod/v1components skills/v1c-motion --agent claude-code --scope project
-gh skill install Viihgod/v1components skills/v1c-motion-review --agent claude-code --scope project
+gh skill install Viihgod/v1components skills/v1c-motion --agent claude-code --scope project --pin main
+gh skill install Viihgod/v1components skills/v1c-motion-review --agent claude-code --scope project --pin main
 ```
 
 In Claude Code, invoke `/v1c-motion` or `/v1c-motion-review`.
