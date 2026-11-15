@@ -679,7 +679,9 @@ export const ViAsyncTransient = forwardRef<HTMLDivElement, ViAsyncTransientProps
 .vi-b06-status__label { color: var(--vi-b06-text); }
 
 .vi-b06-composer {
+  container: vi-prompt-composer / inline-size;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--vi-space-3, 0.75rem);
   width: min(100%, 34rem);
   padding: var(--vi-space-4, 1rem);
@@ -704,9 +706,16 @@ export const ViAsyncTransient = forwardRef<HTMLDivElement, ViAsyncTransientProps
 
 .vi-b06-composer__footer {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: var(--vi-space-3, 0.75rem);
+}
+
+@container vi-prompt-composer (max-width: 14rem) {
+  .vi-b06-composer__submit {
+    flex-basis: 100%;
+  }
 }
 
 .vi-b06-composer__count,
